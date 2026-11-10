@@ -22,4 +22,3 @@ Tools
 Python
 VS Code
 GitHub
-Well lads

@@ -1,1 +1,0 @@
-print("Diddy Jew")

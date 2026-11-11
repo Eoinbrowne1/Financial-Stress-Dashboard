@@ -1,17 +1,37 @@
 import yfinance as yf
-tickers = ["SPY" , "GLD" , "TLT" , "USO"]
-data = yf.download(
-    tickers,
-    start = "2007-01-01",
-    end = "2026-11-11" ,
-    interval = "1d" ,
-    auto_adjust = True,
-    progress = False
-)
+import pandas as pd
 
-prices = data["Close"]
+tickers = ["SPY", "GLD", "TLT", "USO"]
+
+series_list = []
+
+for ticker in tickers:
+    data = yf.download(
+        ticker,
+        start="2007-01-01",
+        end="2026-11-11",
+        auto_adjust=True,
+        progress=False
+    )
+
+    close = data["Close"]
+
+    # Handles yfinance returning either a Series or one-column DataFrame
+    if isinstance(close, pd.DataFrame):
+        close = close.iloc[:, 0]
+
+    close.name = ticker
+    series_list.append(close)
+
+prices = pd.concat(series_list, axis=1)
+
+prices.index.name = "Date"
 
 prices.to_csv("Data/market_data.csv")
 
 print(prices.head())
-print("Market data saved successfully.")
+print()
+print("Missing values:")
+print(prices.isna().sum())
+
+print("\nMarket data saved successfully.")

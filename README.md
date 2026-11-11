@@ -1,24 +1,16 @@
-Financial Stress Dashboard
+Dara — Financial Stress Index
+Ruairi — Equity Market Stress
+Eoin — Crisis Correlation Heatmap
+Sean — Crisis Comparison
 
-Group project for MIS20080 Introduction to Programming.
+Common crisis periods
+- 2008 Global Financial Crisis 
+- 2020 COVID crash
+- 2022 inflation/rate-hike market stress
+You’ll need to agree the exact start/end dates
 
-Group Members
-
-Eoin
-Ruairi
-Sean
-Dara
-
-Project Idea
-A four-panel finance dashboard designed to analyse financial stress across different markets and compare major crisis periods.
-
-Planned Panels
-Financial Stress Index
-Equity Market Stress
-Crisis Correlation Heatmap
-Crisis Comparison
-
-Tools
-Python
-VS Code
-GitHubZ
+Common assets/data
+- S&P 500
+- Gold
+- US bonds/Treasuries
+- Oil

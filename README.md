@@ -21,8 +21,4 @@ Crisis Comparison
 Tools
 Python
 VS Code
-GitHub
-
-TEST MESSAGE FROM SEAN
-
-Just testing that I can share updates with the group through GitHub.
+GitHubZ

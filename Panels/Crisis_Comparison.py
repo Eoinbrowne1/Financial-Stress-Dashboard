@@ -19,6 +19,13 @@ def running_peak(prices):
     return pd.Series(peaks, index=prices.index)
 
 
+def max_drawdown(prices, start, end):
+    """Worst percentage fall from a peak from start to end of the period."""
+    window = prices.loc[start:end]                          #Dates during the crisis
+    drawdown = (window / running_peak(window) - 1) * 100    #Percentage below the peak each day   
+    worst = drawdown.min()                                  #The worst drawdown day                                #Worst day
+    return worst
+
 prices = load_prices()
 spy = prices["SPY"]
-print(running_peak(spy).head(10))
+print(max_drawdown(spy, "2007-10-01", "2009-03-31"))

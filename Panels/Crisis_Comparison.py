@@ -106,7 +106,7 @@ def plot_comparison(table, measure="Max drawdown (%)"):
         ranked = table.sort_values(measure)
     else:
         ranked = table.sort_values(measure, ascending= False)
-        worst = ranked.iloc[0]
+    worst = ranked.iloc[0]
 
     fig, ax = plt.subplots(figsize=(11, 5))
     sns.barplot(data=table, x="Crisis", y=measure, hue="Asset",
@@ -123,5 +123,5 @@ def plot_comparison(table, measure="Max drawdown (%)"):
 prices = load_prices()
 table = compare_crises(prices)
 print(table)
-plot_comparison(table)
+plot_comparison(table, "Peak yearly volatility (%)")
 plt.show()

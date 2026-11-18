@@ -101,13 +101,23 @@ def compare_crises(prices):
 
 def plot_comparison(table, measure="Max drawdown (%)"):
     """Grouped bar chart: one group of bars per crisis, one bar per asset."""
-    fig, ax = plt.subplots(figsize=(10, 5))
+    # Find the worst row, so the title can state the finding
+    if measure == "Max drawdown (%)":
+        ranked = table.sort_values(measure)
+    else:
+        ranked = table.sort_values(measure, ascending= False)
+        worst = ranked.iloc[0]
+
+    fig, ax = plt.subplots(figsize=(11, 5))
     sns.barplot(data=table, x="Crisis", y=measure, hue="Asset",
                 errorbar=None, ax=ax)
     ax.axhline(0, color="grey")
-    ax.set_title(f"{measure} by crisis and asset", loc="left", fontweight="bold")
+    ax.set_title(f"{worst['Asset']} was hit hardest: {worst[measure]:.1f} in the {worst['Crisis']}",
+                 loc="left", fontweight="bold")
     ax.set_xlabel("")
-    return fig, ax
+    ax.legend(frameon=False, loc="upper left", bbox_to_anchor=(1, 1), title="Asset")
+    ax.spines[["top", "right"]].set_visible(False)
+    return fig
 
 
 prices = load_prices()

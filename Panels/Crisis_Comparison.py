@@ -41,6 +41,13 @@ def max_drawdown(prices, start, end):
     worst = drawdown.min()                                  #The worst drawdown day                                #Worst day
     return worst
 
+
+def peak_volatility(prices, start, end, window=21):
+    """Highest annualised volatility (%) during the period from start to end."""
+    daily_returns = prices.pct_change()                #Percentage change from yesterday
+    rolling_vol = daily_returns.rolling(window).std() * np.sqrt(252) * 100    
+    return rolling_vol.loc[start:end].max()
+
 prices = load_prices()
 start, end = CRISES["2008 Financial Crises"]
 
@@ -54,3 +61,8 @@ hardest = min(results, key=results.get)
 safest = max(results, key=results.get)
 print(f"\nThe hardest hit asset was {ASSET_NAMES[hardest]} with a drawdown of {results[hardest]:.2f}%")
 print(f"The asset that held up the best was {ASSET_NAMES[safest]} with a drawdown of {results[safest]:.2f}%")
+
+print()
+for ticker in ASSET_NAMES:
+    vol = peak_volatility(prices[ticker], start, end)
+    print(f"Peak volatility for {ASSET_NAMES[ticker]} was {vol:.2f}%")

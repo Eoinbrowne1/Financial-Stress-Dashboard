@@ -29,23 +29,19 @@ def drawdownsp(x, y):
             dates1 = spdata.loc["2007-10-01":x].copy()
             peak1 = dates1["Close"].max()
             dateprice1 = spdata.loc[x, "Close"]
-            drawdown1 = ((peak1 - dateprice1) / peak1) * 100
+            drawdown1 = round((((peak1 - dateprice1) / peak1) * 100), 2)
             print(drawdown1)
     elif y == "COVID-19 Crash" and x in spdata.loc["2020-02-01":"2020-04-30"].index:
             dates2 = spdata.loc["2020-02-01":x].copy()
             peak2 = dates2["Close"].max()
             dateprice2 = spdata.loc[x, "Close"]
-            drawdown2 = ((peak2 - dateprice2) / peak2) * 100
+            drawdown2 = round((((peak2 - dateprice2) / peak2) * 100), 2)
             print(drawdown2)
-    elif y == "2022 Market Stress" and x in spdata.loc["2021-12-01":"2022-10-31"]:
+    elif y == "2022 Market Stress" and x in spdata.loc["2021-12-01":"2022-10-31"].index:
             dates3 = spdata.loc["2021-12-01":x].copy()
             peak3 = dates3["Close"].max()
             dateprice3 = spdata.loc[x, "Close"]
-            drawdown3 = ((peak3 - dateprice3) / peak3) * 100
-            print(drawdown3)
+            drawdown3 = round((((peak3 - dateprice3) / peak3) * 100), 2)
+            return(drawdown3)
     else: None 
 
-drawdownsp("2007-11-28", "2008 Financial Crisis")
-drawdownsp("2020-04-31", "COVID-19 Crash")
-drawdownsp("2021-12-10", "2022 Market Stress")
-drawdownsp("2008-12-28", "2008 Financial Crisis")

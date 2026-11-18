@@ -3,9 +3,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+pd.set_option("display.max_columns", None)
+pd.set_option("display.width", 200)
+
 #Crises periods agreed by the team
 CRISES = {
-    "2008 Financial Crises": ("2007-10-01", "2009-03-31"),
+    "2008 Financial Crisis": ("2007-10-01", "2009-03-31"),
     "COVID-19 Crash": ("2020-02-01", "2020-04-30"),
     "2022 Market Stress": ("2021-12-01", "2022-10-31")
 }

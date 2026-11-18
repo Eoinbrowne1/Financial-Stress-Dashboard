@@ -56,6 +56,18 @@ def peak_volatility(prices, start, end, window=21):
     return rolling_vol.loc[start:end].max()
 
 
+def recovery_days(prices, peak_date, trough_date):
+    """Trading days from the bottom until the price gets back to its old peak.
+    Returns None if it never recovered."""
+    peak_price = prices.loc[peak_date]
+    after_trough = prices.loc[trough_date:]                     #from the bottom to the end of the data
+    back_above = after_trough[after_trough >= peak_price]       #days at or above the old peak
+
+    if len(back_above) == 0:                                    #no days found = never recovered
+        return None
+
+    recovery_date = back_above.index[0]                         #first day it got back
+    return len(prices.loc[trough_date:recovery_date]) - 1  
 
 
 prices = load_prices()
@@ -68,6 +80,11 @@ for ticker in ASSET_NAMES:
     results[ticker] = worst
     print(f"The worst drawdown for {ASSET_NAMES[ticker]} was {worst:.2f}%")
     print(f"Peak on {result['peak_date'].date()}, bottom on {result['trough_date'].date()}")
+    days = recovery_days(prices[ticker], result["peak_date"], result["trough_date"])
+    if days is None:
+        print("Never recovered to its old peak")
+    else:
+        print(f"Recovery: {days} trading days")
 
 hardest = min(results, key=results.get)
 safest = max(results, key=results.get)

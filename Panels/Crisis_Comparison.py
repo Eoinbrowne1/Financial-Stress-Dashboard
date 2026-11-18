@@ -99,7 +99,19 @@ def compare_crises(prices):
     return pd.DataFrame(rows)       
 
 
+def plot_comparison(table, measure="Max drawdown (%)"):
+    """Grouped bar chart: one group of bars per crisis, one bar per asset."""
+    fig, ax = plt.subplots(figsize=(10, 5))
+    sns.barplot(data=table, x="Crisis", y=measure, hue="Asset",
+                errorbar=None, ax=ax)
+    ax.axhline(0, color="grey")
+    ax.set_title(f"{measure} by crisis and asset", loc="left", fontweight="bold")
+    ax.set_xlabel("")
+    return fig, ax
+
 
 prices = load_prices()
 table = compare_crises(prices)
 print(table)
+plot_comparison(table)
+plt.show()

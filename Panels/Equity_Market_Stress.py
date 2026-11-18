@@ -32,3 +32,12 @@ dfnasd.to_csv(outputfile4)
 dfruss = yf.download("^RUT", start = "2007-01-01", end = "2026-01-01")
 outputfile5 = "russ.csv"
 dfruss.to_csv(outputfile5)
+
+#List of tickers and their full name
+tickers = {"^VIX":"CBOE Volatility Index", "^GSPC":"S&P 500 Index", "XLF":"Financial Sector ETF",
+            "^NDX":"Nasdaq 100 Index", "^RUT":"Russell 2000 Index"}
+
+#Crisis periods as agreed on
+crisis_periods = {"2008 Financial Crisis":("2007-10-1", "2009-03-31"),
+                  "COVID-19 Crash":("2020-02-01", "2020-04-30"),
+                  "Market Sress":("2021-12-01", "2022-10-31")}

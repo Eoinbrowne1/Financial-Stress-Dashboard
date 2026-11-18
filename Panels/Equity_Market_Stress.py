@@ -15,7 +15,7 @@ tickers = {"^VIX":"CBOE Volatility Index", "^GSPC":"S&P 500 Index", "XLF":"Finan
 #Crisis periods as agreed on
 crisis_periods = {"2008 Financial Crisis":("2007-10-1", "2009-03-31"),
                   "COVID-19 Crash":("2020-02-01", "2020-04-30"),
-                  "Market Sress":("2021-12-01", "2022-10-31")}
+                  "2022 Market Sress":("2021-12-01", "2022-10-31")}
 
 vixdata = pd.read_csv("vix.csv", index_col= 0, parse_dates= True, skiprows=[1,2])
 spdata = pd.read_csv("sp.csv", index_col= 0, parse_dates= True, skiprows=[1,2])
@@ -30,6 +30,22 @@ def drawdownsp(x, y):
             peak1 = dates1["Close"].max()
             dateprice1 = spdata.loc[x, "Close"]
             drawdown1 = ((peak1 - dateprice1) / peak1) * 100
-            print(str(drawdown1))
+            print(drawdown1)
+    elif y == "COVID-19 Crash" and x in spdata.loc["2020-02-01":"2020-04-30"].index:
+            dates2 = spdata.loc["2020-02-01":x].copy()
+            peak2 = dates2["Close"].max()
+            dateprice2 = spdata.loc[x, "Close"]
+            drawdown2 = ((peak2 - dateprice2) / peak2) * 100
+            print(drawdown2)
+    elif y == "2022 Market Stress" and x in spdata.loc["2021-12-01":"2022-10-31"]:
+            dates3 = spdata.loc["2021-12-01":x].copy()
+            peak3 = dates3["Close"].max()
+            dateprice3 = spdata.loc[x, "Close"]
+            drawdown3 = ((peak3 - dateprice3) / peak3) * 100
+            print(drawdown3)
+    else: None 
 
 drawdownsp("2007-11-28", "2008 Financial Crisis")
+drawdownsp("2020-04-31", "COVID-19 Crash")
+drawdownsp("2021-12-10", "2022 Market Stress")
+drawdownsp("2008-12-28", "2008 Financial Crisis")

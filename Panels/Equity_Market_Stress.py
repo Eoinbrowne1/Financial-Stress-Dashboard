@@ -43,5 +43,14 @@ def drawdownsp(x, y):
             dateprice3 = spdata.loc[x, "Close"]
             drawdown3 = round((((peak3 - dateprice3) / peak3) * 100), 2)
             return(drawdown3)
-    else: None 
+    elif y in crisis_periods: 
+        trading_date = spdata.index.asof(pd.Timestamp(x))
+        dates4 = spdata.loc[crisis_periods[y][0]:trading_date]
+        dateprice4 = spdata.loc[trading_date, "Close"].copy()
+        peak4 = dates4["Close"].max()
+        drawdown4 = round((((peak4 - dateprice4) / peak4) * 100), 2)
+        return(drawdown4)
+
+test = drawdownsp("2008-12-28", "2008 Financial Crisis")
+print(test)
 

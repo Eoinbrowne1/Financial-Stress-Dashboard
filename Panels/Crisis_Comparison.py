@@ -145,8 +145,26 @@ def plot_comparison(table, measure="Max drawdown (%)"):
     return fig
 
 
+def plot_bubbles(table):
+   """Bubble chart: how far each asset fell, how long it took to recover,
+    and how wild it got (bubble size)."""
+   fig, ax = plt.subplots(figsize=(11, 6), layout="constrained")
+   sns.scatterplot(data=table,
+                   x="Max drawdown (%)",
+                   y="Recovery (trading days)",
+                   hue="Asset",
+                   size="Peak yearly volatility (%)",
+                   sizes=(100, 1500),
+                   palette=ASSET_COLOURS, alpha=0.7, ax=ax)
+   ax.legend(frameon=False, loc="upper left", bbox_to_anchor=(1, 1))
+   ax.set_title("How deep, how long, how wild: every asset in every crisis",
+                 loc="left", fontweight="bold", color=INK)
+   return fig
+   
+                                
+
+
 prices = load_prices()
 table = compare_crises(prices)
-print(table)
-#plot_comparison(table, "Peak yearly volatility (%)")
-#plt.show()
+plot_bubbles(table)
+plt.show()

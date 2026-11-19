@@ -82,29 +82,35 @@ def peak_volatility(prices, start, end, window=21):
 
 def recovery_days(prices, peak_date, trough_date):
     """Trading days from the bottom until the price gets back to its old peak.
-    Returns None if it never recovered."""
+    Returns (days, True) if it has recovered, or (days so far, False) if it hasn't yet."""
     peak_price = prices.loc[peak_date]
     after_trough = prices.loc[trough_date:]                     #from the bottom to the end of the data
     back_above = after_trough[after_trough >= peak_price]       #days at or above the old peak
 
-    if len(back_above) == 0:                                    #no days found = never recovered
-        return None
+    if len(back_above) == 0:                                    #never recovered
+        return len(after_trough) - 1, False                     #days so far, and "not recovered"
     else:
         recovery_date = back_above.index[0]                         #first day it got back
-        return len(prices.loc[trough_date:recovery_date]) - 1 
+        return len(prices.loc[trough_date:recovery_date]) - 1, True
 
 
 def crisis_row(prices, ticker, crisis_name, start, end):
     """All the measures for one asset in one crisis, as one row of the table."""
     dd = max_drawdown(prices[ticker], start, end)
     vol = peak_volatility(prices[ticker], start, end)
-    days = recovery_days(prices[ticker], dd["peak_date"], dd["trough_date"])
+    days, recovered = recovery_days(prices[ticker], dd["peak_date"], dd["trough_date"])
+
+    if recovered:
+        recovered_text = "Yes"
+    else:
+        recovered_text = "No"
     return {
         "Crisis": crisis_name,
         "Asset": ASSET_NAMES[ticker],
         "Max drawdown (%)": round(dd["drawdown"], 2),
         "Peak yearly volatility (%)": round(vol, 2),
         "Recovery (trading days)": days,
+        "Recovered": recovered_text,
         }
 
 
@@ -142,5 +148,5 @@ def plot_comparison(table, measure="Max drawdown (%)"):
 prices = load_prices()
 table = compare_crises(prices)
 print(table)
-plot_comparison(table, "Peak yearly volatility (%)")
-plt.show()
+#plot_comparison(table, "Peak yearly volatility (%)")
+#plt.show()

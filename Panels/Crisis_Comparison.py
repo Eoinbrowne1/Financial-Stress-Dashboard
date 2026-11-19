@@ -21,6 +21,25 @@ ASSET_NAMES = {
     "USO": "Oil"
 }
 
+#Team colours: same colour for all four panels too
+ASSET_COLOURS = {
+    "US Stocks": "#c0392b",          #Red (SPY)
+    "Gold": "#d4a017",               #Gold (GLD)
+    "US Government Bonds": "#3a9a5b", #green (TLT)
+    "Oil": "#2e6fbf",                  #blue (USO)
+}
+
+#House style for every chart
+INK, MUTED = "#0b0b0b", "#52514e"
+plt.rcParams.update({
+    "axes.spines.top": False,
+    "axes.spines.right": False,
+    "axes.grid":True, "grid.color": "#e4e3df",
+    "axes.edgecolor": MUTED,
+    "axes.labelcolor":MUTED,
+    "xtick.color": MUTED, "ytick.color": MUTED,
+    "font.size":11,
+})
 
 def load_prices():
     """Load daily prices from market_data.csv with the dates as the index."""
@@ -108,15 +127,15 @@ def plot_comparison(table, measure="Max drawdown (%)"):
         ranked = table.sort_values(measure, ascending= False)
     worst = ranked.iloc[0]
 
-    fig, ax = plt.subplots(figsize=(11, 5))
+    fig, ax = plt.subplots(figsize=(11, 5), layout="constrained")
     sns.barplot(data=table, x="Crisis", y=measure, hue="Asset",
-                errorbar=None, ax=ax)
+                palette=ASSET_COLOURS, errorbar=None, ax=ax)
     ax.axhline(0, color="grey")
-    ax.set_title(f"{worst['Asset']} was hit hardest: {worst[measure]:.1f} in the {worst['Crisis']}",
-                 loc="left", fontweight="bold")
-    ax.set_xlabel("")
+    ax.set_title(f"{worst['Asset']} was hit hardest: {worst[measure]:.1f}% in the {worst['Crisis']}",
+                 loc="left", fontweight="bold", color=INK)
+    ax.set_xlabel("Source: Yahoo Finance daily prices (SPY, GLD, TLT, USO), 2007 onwards.",
+                  loc="left", fontsize=9)
     ax.legend(frameon=False, loc="upper left", bbox_to_anchor=(1, 1), title="Asset")
-    ax.spines[["top", "right"]].set_visible(False)
     return fig
 
 

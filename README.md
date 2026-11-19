@@ -9,7 +9,7 @@ Common crisis periods
 - 2022 inflation/rate-hike market stress
 You’ll need to agree the exact start/end dates
 
-Common assets/data
+Common assets/data 
 - S&P 500
 - Gold
 - US bonds/Treasuries

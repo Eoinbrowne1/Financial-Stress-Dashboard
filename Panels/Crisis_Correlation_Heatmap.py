@@ -24,6 +24,9 @@ corr_2022 = crisis_correlation("2021-12-01", "2022-10-31")
 
 def plot_heatmap(correlation_matrix, title):
     fig, ax = plt.subplots(figsize=(7,6))
+    mask = np.tril(
+        np.ones(correlation_matrix.shape, dtype=bool)
+    )
     sns.heatmap(
         correlation_matrix,
         annot=True,
@@ -31,7 +34,8 @@ def plot_heatmap(correlation_matrix, title):
         vmin=-1 ,
         vmax=1 ,
         center=0 ,
-        ax=ax
+        ax=ax ,
+        mask=mask
     )
                
     ax.set_title(title)

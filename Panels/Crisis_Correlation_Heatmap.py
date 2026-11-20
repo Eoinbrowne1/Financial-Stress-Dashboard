@@ -47,12 +47,13 @@ def correlation_summary(correlation_matrix):
     pairs = correlation_matrix.where(mask).stack()
 
     average_corr = pairs.mean()
+    average_abs_corr = pairs.abs().mean()
     strongest_pair = pairs.idxmax()
     weakest_pair = pairs.idxmin()
     strongest_value = pairs.max()
     weakest_value = pairs.min()
 
-    return average_corr, strongest_pair, weakest_pair, strongest_value, weakest_value
+    return average_corr, average_abs_corr, strongest_pair, weakest_pair, strongest_value, weakest_value
 
 crises = {
     "2008 Financial Crisis": ("2007-10-01", "2009-03-31"),
@@ -63,11 +64,12 @@ crises = {
 def show_selected_crisis(selected_crisis):
     start_date, end_date = crises[selected_crisis]
     selected_corr = crisis_correlation(start_date, end_date)
-    average_corr, strongest_pair, weakest_pair, strongest_value, weakest_value = correlation_summary(selected_corr)
+    average_corr, average_abs_corr, strongest_pair, weakest_pair, strongest_value, weakest_value = correlation_summary(selected_corr)
     fig = plot_heatmap(selected_corr, selected_crisis)
     return (
         fig,
         average_corr,
+        average_abs_corr,
         strongest_pair,
         weakest_pair,
         strongest_value,

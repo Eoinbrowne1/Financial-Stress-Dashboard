@@ -28,10 +28,11 @@ with tab3:
         "Select crisis period",
         list(crises.keys())
     )
-    fig, average_corr, strongest_pair, weakest_pair, strongest_value, weakest_value = show_selected_crisis(selected_crisis)
+    fig, average_corr, average_abs_corr, strongest_pair, weakest_pair, strongest_value, weakest_value = show_selected_crisis(selected_crisis)
     st.pyplot(fig)
 
     st.write("Average Correlation:", round(average_corr, 2))
+    st.write("Average Absolute Correlation:", round(average_abs_corr, 2))
     st.write("Highest Positive Correlation:", strongest_pair, round(strongest_value, 2))
     st.write("Most Negative Correlation:", weakest_pair, round(weakest_value, 2))
 

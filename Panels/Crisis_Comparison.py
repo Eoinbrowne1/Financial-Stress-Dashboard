@@ -160,7 +160,7 @@ def plot_bubbles(table):
    if slowest["Recovered"] == "No":
        headline = f"{slowest['Asset']} has still not recovered from the {slowest['Crisis']}"
    else:
-       headline = f"{slowest['Asset']} look longest to recover, after the {slowest['Crisis']}"
+       headline = f"{slowest['Asset']} took longest to recover, after the {slowest['Crisis']}"
    fig, ax = plt.subplots(figsize=(11, 6), layout="constrained")
    sns.scatterplot(data=table,
                    x="Max drawdown (%)",

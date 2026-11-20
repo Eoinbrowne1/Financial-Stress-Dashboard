@@ -7,9 +7,6 @@ import pandas as pd
 import matplotlib.dates as mdates
 from matplotlib.widgets import Button, RadioButtons, TextBox
 
-
-
-
 #List of tickers and their full name
 tickers = {"^VIX":"CBOE Volatility Index", "^GSPC":"S&P 500 Index", "XLF":"Financial Sector ETF",
             "^NDX":"Nasdaq 100 Index", "^RUT":"Russell 2000 Index"}
@@ -41,6 +38,9 @@ def drawdown(x, y, z):
                      peak = dates["Close"].max()
                      drawdown = round((((dateprice - peak) / peak) * 100), 2)
                      return(drawdown)
+              else:
+                     return("Please select a date between " + str(crisis_periods[y][0]) + " and " + str(crisis_periods[y][1]) + ".")
+     
 
    
 #x for date y for crisis
@@ -64,6 +64,8 @@ def vixfear(x, y):
                        return("ELEVATED (20-30)")
                 if vix_level < 20:
                        return("CALM (<20)")
+              else:
+                     return("Please select a date between " + str(crisis_periods[y][0]) + " and " + str(crisis_periods[y][1]) + ".")
 
 #21 day annualized realized volatility log returns
 def realizedvol(x, y):
@@ -76,6 +78,8 @@ def realizedvol(x, y):
                      vol_21d = round(float(realvolseries.loc[date]), 2)
                      vix_spread = round(vix_level - vol_21d, 2)
                      return(vix_spread)
+              else:
+                     return("Please select a date between " + str(crisis_periods[y][0]) + " and " + str(crisis_periods[y][1]) + ".")
 
 #Banking/Financial Sector relative performance from crisis start to date 
 def finperformce(x, y):
@@ -87,7 +91,23 @@ def finperformce(x, y):
                      currentratio = fsetfdata.loc[trading_date, "Close"] / spdata.loc[trading_date, "Close"]
                      change_in_relperf_todate = round(((currentratio / startratio) - 1) * 100 , 2)
                      return(change_in_relperf_todate)
+              else:
+                     return("Please select a date between " + str(crisis_periods[y][0]) + " and " + str(crisis_periods[y][1]) + ".")
 
+#Initializing plots and prepping data selection
+state = {"Crisis":"2008 Financial Crisis", 
+         "Date":default_dates["2008 Financial Crisis"],
+         "Zoom Before":pd.Timedelta(days=30),
+         "Zoom After":pd.Timedelta(days=30)}
 
+plt.rcParams["font.sans-serif"] = "Segoe UI"
+fig = plt.figure(figsize = (14, 8.5), facecolor= "#f8fafc")
+fig.canvas.manager.set_window_title("Financial Stress Dashboard")
 
-       
+gs = fig.add_gridspec(2, 1, left=0.25, right=0.96, top=0.77, bottom=0.09, hspace=0.16)
+ax_sp = fig.add_subplot(gs[0])
+ax_vix = fig.add_subplot(gs[1], sharex=ax_sp)
+
+kpi_text = fig.text(0.25, 0.81, "", fontsize=10, family="Consolas", va="bottom", ha="left",
+                    bbox=dict(boxstyle = "round,pad=0.65", facecolor = "#ffffff", edgecolor = "#cbd5e1", linewidth = 1.2,),)
+status_text = fig.text(0.03, 0.28, "", fontsize=9, color="#475569", wrap=True)

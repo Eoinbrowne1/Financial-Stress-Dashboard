@@ -39,8 +39,9 @@ def drawdown(x, y, z):
                      drawdown = round((((dateprice - peak) / peak) * 100), 2)
                      return(drawdown)
               else:
-                     return("Please select a date between " + str(crisis_periods[y][0]) + " and " + str(crisis_periods[y][1]) + ".")
-     
+                     raise ValueError(f"Please select a date between {crisis_periods[y][0]} and {crisis_periods[y][1]}")
+       if y not in crisis_periods:
+             raise ValueError(f"Unknown crisis regime: {y}") 
 
    
 #x for date y for crisis
@@ -65,7 +66,9 @@ def vixfear(x, y):
                 if vix_level < 20:
                        return("CALM (<20)")
               else:
-                     return("Please select a date between " + str(crisis_periods[y][0]) + " and " + str(crisis_periods[y][1]) + ".")
+                     raise ValueError(f"Please select a date between {crisis_periods[y][0]} and {crisis_periods[y][1]}")
+       if y not in crisis_periods:
+             raise ValueError(f"Unknown crisis regime: {y}")
 
 #21 day annualized realized volatility log returns
 def realizedvol(x, y):
@@ -79,7 +82,9 @@ def realizedvol(x, y):
                      vix_spread = round(vix_level - vol_21d, 2)
                      return(vix_spread)
               else:
-                     return("Please select a date between " + str(crisis_periods[y][0]) + " and " + str(crisis_periods[y][1]) + ".")
+                raise ValueError(f"Please select a date between {crisis_periods[y][0]} and {crisis_periods[y][1]}")
+       if y not in crisis_periods:
+              raise ValueError(f"Unknown crisis regime: {y}")      
 
 #Banking/Financial Sector relative performance from crisis start to date 
 def finperformce(x, y):
@@ -92,8 +97,12 @@ def finperformce(x, y):
                      change_in_relperf_todate = round(((currentratio / startratio) - 1) * 100 , 2)
                      return(change_in_relperf_todate)
               else:
-                     return("Please select a date between " + str(crisis_periods[y][0]) + " and " + str(crisis_periods[y][1]) + ".")
+                raise ValueError(f"Please select a date between {crisis_periods[y][0]} and {crisis_periods[y][1]}")
+       if y not in crisis_periods:
+              raise ValueError(f"Unknown crisis regime: {y}") 
 
+
+                     
 #Initializing plots and prepping data selection
 state = {"Crisis":"2008 Financial Crisis", 
          "Date":default_dates["2008 Financial Crisis"],
@@ -103,7 +112,6 @@ state = {"Crisis":"2008 Financial Crisis",
 plt.rcParams["font.sans-serif"] = "Segoe UI"
 fig = plt.figure(figsize = (14, 8.5), facecolor= "#f8fafc")
 fig.canvas.manager.set_window_title("Financial Stress Dashboard")
-
 gs = fig.add_gridspec(2, 1, left=0.25, right=0.96, top=0.77, bottom=0.09, hspace=0.16)
 ax_sp = fig.add_subplot(gs[0])
 ax_vix = fig.add_subplot(gs[1], sharex=ax_sp)
@@ -111,3 +119,9 @@ ax_vix = fig.add_subplot(gs[1], sharex=ax_sp)
 kpi_text = fig.text(0.25, 0.81, "", fontsize=10, family="Consolas", va="bottom", ha="left",
                     bbox=dict(boxstyle = "round,pad=0.65", facecolor = "#ffffff", edgecolor = "#cbd5e1", linewidth = 1.2,),)
 status_text = fig.text(0.03, 0.28, "", fontsize=9, color="#475569", wrap=True)
+
+#function for updating dashboard
+def update(target_date: str, crisis: str):
+       try:
+              figures = (drawdownsp(target_date, crisis), drawdownnd(target_date, crisis), drawdownrus(target_date, crisis),
+                         vixfear(target_date, crisis), realizedvol(target_date, crisis), finperformce(target_date, crisis))

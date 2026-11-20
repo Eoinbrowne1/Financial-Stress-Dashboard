@@ -1,9 +1,11 @@
 import yfinance as yf
 import seaborn as sns
 import fredapi as fpi
-import matplotlib as plt
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import matplotlib.dates as mdates
+from matplotlib.widgets import Button, RadioButtons, TextBox
 
 
 
@@ -16,6 +18,11 @@ tickers = {"^VIX":"CBOE Volatility Index", "^GSPC":"S&P 500 Index", "XLF":"Finan
 crisis_periods = {"2008 Financial Crisis":("2007-10-1", "2009-03-31"),
                   "COVID-19 Crash":("2020-02-01", "2020-04-30"),
                   "2022 Market Sress":("2021-12-01", "2022-10-31")}
+
+#Default dates before any are selected
+default_dates = {"2008 Financial Crisis":"2008-07-02",
+                 "COVID-19 Crash":"2020-03-03",
+                 "2022 Market Stress":"2022-05-09"}
 
 #prepping data for use in date calling functions
 vixdata = pd.read_csv("vix.csv", index_col= 0, parse_dates= True, skiprows=[1,2])

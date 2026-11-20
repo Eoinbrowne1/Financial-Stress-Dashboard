@@ -29,6 +29,13 @@ ASSET_COLOURS = {
     "Oil": "#2e6fbf",                  #blue (USO)
 }
 
+#Short names for labelling bubbles
+CRISIS_SHORT = {
+    "2008 Financial Crisis": "2008",
+    "COVID-19 Crash": "COVID",
+    "2022 Market Stress": "2022",
+}
+
 #House style for every chart
 INK, MUTED = "#0b0b0b", "#52514e"
 plt.rcParams.update({
@@ -110,6 +117,7 @@ def crisis_row(prices, ticker, crisis_name, start, end):
         "Max drawdown (%)": round(dd["drawdown"], 2),
         "Peak yearly volatility (%)": round(vol, 2),
         "Recovery (trading days)": days,
+        "Recovery (years)": round(days / 252,1),
         "Recovered": recovered_text,
         }
 
@@ -148,17 +156,31 @@ def plot_comparison(table, measure="Max drawdown (%)"):
 def plot_bubbles(table):
    """Bubble chart: how far each asset fell, how long it took to recover,
     and how wild it got (bubble size)."""
+   slowest = table.sort_values("Recovery (trading days)", ascending=False).loc[0]
+   if slowest["Recovered"] == "No":
+       headline = f"{slowest['Asset']} has still not recovered from the {slowest['Crisis']}"
+    else:
+       headline = f"{slowest['Asset']} look longest to recover, after the {slowest['Crisis']}"
    fig, ax = plt.subplots(figsize=(11, 6), layout="constrained")
    sns.scatterplot(data=table,
                    x="Max drawdown (%)",
-                   y="Recovery (trading days)",
+                   y="Recovery (years)",
                    hue="Asset",
                    size="Peak yearly volatility (%)",
                    sizes=(100, 1500),
                    palette=ASSET_COLOURS, alpha=0.7, ax=ax)
    ax.legend(frameon=False, loc="upper left", bbox_to_anchor=(1, 1))
-   ax.set_title("How deep, how long, how wild: every asset in every crisis",
-                 loc="left", fontweight="bold", color=INK)
+   ax.set_title(headline, loc="left", fontweight="bold", color=INK)
+   ax.axhile(1, color=MUTED, linestyle=":", linewidth=1)
+   ax.text(table["Max drawdown (%)"].min(), 1.2, "1 year", color=MUTED, fontsize=9)
+   for i, row in table.iterrows():                       # one row = one bubble
+        label = CRISIS_SHORT[row["Crisis"]]
+        if row["Recovered"] == "No":
+            label = label + " (not yet recovered)"
+        ax.annotate(label,
+                    (row["Max drawdown (%)"], row["Recovery (years)"]),
+                    xytext=(10, 10), textcoords="offset points",
+                    fontsize=9, color=MUTED)
    return fig
    
                                 

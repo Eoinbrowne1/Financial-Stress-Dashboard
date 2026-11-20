@@ -28,12 +28,12 @@ fsetfdata = pd.read_csv("fsetf.csv", index_col= 0, parse_dates= True, skiprows=[
 nasddata = pd.read_csv("nasd.csv", index_col= 0, parse_dates= True, skiprows=[1,2])
 russdata = pd.read_csv("russ.csv", index_col= 0, parse_dates= True, skiprows=[1,2])
 
-#function for calculating drawdowns
+#function for calculating drawdowns, x is date y is crisis z is data
 def drawdown(x, y, z):
        if y in crisis_periods:
-              if crisis_periods[y][0] <= x <= crisis_periods[y][1]:
+              if z.index.asof(pd.Timestamp(crisis_periods[y][0])) <= x <= z.index.asof(pd.Timestamp(crisis_periods[y][1])):
                      trading_date = z.index.asof(pd.Timestamp(x))
-                     dates = z.loc[crisis_periods[y][0]:trading_date]
+                     dates = z.loc[z.index.asof(pd.Timestamp(crisis_periods[y][0])):trading_date]
                      dateprice = z.loc[trading_date, "Close"].copy()
                      peak = dates["Close"].max()
                      drawdown = round((((dateprice - peak) / peak) * 100), 2)
@@ -54,7 +54,7 @@ def drawdownrus(x, y):
 
 def vixfear(x, y):
        if y in crisis_periods:
-              if x >= crisis_periods[y][0] and x<= crisis_periods[y][1]:
+              if vixdata.index.asof(pd.Timestamp(crisis_periods[y][0])) <= x <= vixdata.index.asof(pd.Timestamp(crisis_periods[y][1])):
                 date = vixdata.index.asof(pd.Timestamp(x))             
                 vix_level = round(float(vixdata.loc[date, "Close"]), 2)
                 if vix_level >= 40:
@@ -73,7 +73,7 @@ def vixfear(x, y):
 #21 day annualized realized volatility log returns
 def realizedvol(x, y):
        if y in crisis_periods:
-              if crisis_periods[y][0] <= x <= crisis_periods[y][1]:
+              if vixdata.index.asof(pd.Timestamp(crisis_periods[y][0])) <= x <= vixdata.index.asof(pd.Timestamp(crisis_periods[y][1])):
                      date = vixdata.index.asof(pd.Timestamp(x))
                      vix_level = float(vixdata.loc[date, "Close"])
                      log_ret = np.log(spdata["Close"] / spdata["Close"].shift(1))
@@ -89,9 +89,9 @@ def realizedvol(x, y):
 #Banking/Financial Sector relative performance from crisis start to date 
 def finperformce(x, y):
        if y in crisis_periods:
-              if crisis_periods[y][0] <= x <= crisis_periods[y][1]:
-                     trading_date = fsetfdata.index.asof[pd.Timestamp(x)]
-                     startdate = crisis_periods[y][0]
+              if fsetfdata.index.asof(pd.Timestamp(crisis_periods[y][0])) <= x <= fsetfdata.index.asof(pd.Timestamp(crisis_periods[y][1])):
+                     trading_date = fsetfdata.index.asof(pd.Timestamp(x))
+                     startdate = fsetfdata.index.asof(pd.Timestamp(crisis_periods[y][0]))
                      startratio = fsetfdata.loc[startdate, "Close"] / spdata.loc[startdate, "Close"]
                      currentratio = fsetfdata.loc[trading_date, "Close"] / spdata.loc[trading_date, "Close"]
                      change_in_relperf_todate = round(((currentratio / startratio) - 1) * 100 , 2)
@@ -125,3 +125,7 @@ def update(target_date: str, crisis: str):
        try:
               figures = (drawdownsp(target_date, crisis), drawdownnd(target_date, crisis), drawdownrus(target_date, crisis),
                          vixfear(target_date, crisis), realizedvol(target_date, crisis), finperformce(target_date, crisis))
+       except Exception as exc:
+             
+             
+             

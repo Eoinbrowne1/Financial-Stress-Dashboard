@@ -183,7 +183,7 @@ def plot_bubbles(table):
             offset = (10, 10)
         ax.annotate(label,
                     (row["Max drawdown (%)"], row["Recovery (years)"]),
-                    xytext=(10, 10), textcoords="offset points",
+                    xytext=offset, textcoords="offset points",
                     fontsize=9, color=MUTED)
    return fig
    

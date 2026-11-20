@@ -57,5 +57,15 @@ def vixfear(x, y):
                 if vix_level < 20:
                        return("CALM (<20)")
 
-well = vixfear("2008-02-07", "2008 Financial Crisis")              
-print(well)
+#21 day annualized realized volatility log returns
+def realizedvol(x, y):
+       if y in crisis_periods:
+              if crisis_periods[y][0] <= x <= crisis_periods[y][1]:
+                     date = vixdata.index.asof(pd.Timestamp(x))
+                     vix_level = float(vixdata.loc[date, "Close"])
+                     log_ret = np.log(spdata["Close"] / spdata["Close"].shift(1))
+                     realvolseries = log_ret.rolling(window = 21).std() * np.sqrt(252) * 100
+                     vol_21d = round(float(realvolseries.loc[date]), 2)
+                     vix_spread = round(vix_level - vol_21d, 2)
+                     return(vix_spread)
+              

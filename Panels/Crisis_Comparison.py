@@ -156,7 +156,7 @@ def plot_comparison(table, measure="Max drawdown (%)"):
 def plot_bubbles(table):
    """Bubble chart: how far each asset fell, how long it took to recover,
     and how wild it got (bubble size)."""
-   slowest = table.sort_values("Recovery (trading days)", ascending=False).loc[0]
+   slowest = table.sort_values("Recovery (trading days)", ascending=False).iloc[0]
    if slowest["Recovered"] == "No":
        headline = f"{slowest['Asset']} has still not recovered from the {slowest['Crisis']}"
    else:

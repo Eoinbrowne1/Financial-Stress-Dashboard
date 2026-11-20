@@ -87,7 +87,7 @@ def realizedvol(x, y):
               raise ValueError(f"Unknown crisis regime: {y}")      
 
 #Banking/Financial Sector relative performance from crisis start to date 
-def finperformce(x, y):
+def finperformance(x, y):
        if y in crisis_periods:
               if fsetfdata.index.asof(pd.Timestamp(crisis_periods[y][0])) <= x <= fsetfdata.index.asof(pd.Timestamp(crisis_periods[y][1])):
                      trading_date = fsetfdata.index.asof(pd.Timestamp(x))
@@ -123,9 +123,22 @@ status_text = fig.text(0.03, 0.28, "", fontsize=9, color="#475569", wrap=True)
 #function for updating dashboard
 def update(target_date: str, crisis: str):
        try:
-              figures = (drawdownsp(target_date, crisis), drawdownnd(target_date, crisis), drawdownrus(target_date, crisis),
-                         vixfear(target_date, crisis), realizedvol(target_date, crisis), finperformce(target_date, crisis))
+              metrics = (drawdownsp(target_date, crisis), drawdownnd(target_date, crisis), drawdownrus(target_date, crisis),
+                         vixfear(target_date, crisis), realizedvol(target_date, crisis), finperformance(target_date, crisis))
        except Exception as exc:
+             status_text.set_text(f"Input error:\n{exc}")
+             status_text.set_color("#dc2626")
+             fig.canvas.draw_idle()
+             return
+       t_date = spdata.index.asof(pd.Timestamp(target_date))
+       state["Date"] = t_date.strftime("%Y-%M-%D")
+
+       if pd.Timestamp(target_date) != t_date:
+        status_text.set_text(f"Snapped {target_date} to valid\ntrading day: {state['date']}")
+        status_text.set_color("#0369a1")
+       else:
+        status_text.set_text(f"Showing trading session:\n{state['date']}")
+        status_text.set_color("#15803d")
              
              
              

@@ -25,7 +25,7 @@ nasddata = pd.read_csv("nasd.csv", index_col= 0, parse_dates= True, skiprows=[1,
 russdata = pd.read_csv("russ.csv", index_col= 0, parse_dates= True, skiprows=[1,2])
 
 #function for calculating drawdowns
-def drawdown1(x, y, z):
+def drawdown(x, y, z):
        if y in crisis_periods:
               if crisis_periods[y][0] <= x <= crisis_periods[y][1]:
                      trading_date = z.index.asof(pd.Timestamp(x))
@@ -33,15 +33,16 @@ def drawdown1(x, y, z):
                      dateprice = z.loc[trading_date, "Close"].copy()
                      peak = dates["Close"].max()
                      drawdown = round((((dateprice - peak) / peak) * 100), 2)
+                     return(drawdown)
 
    
 #x for date y for crisis
 def drawdownsp(x, y):
-       return(drawdown1(x, y, spdata))
+       return(drawdown(x, y, spdata))
 def drawdownnd(x, y):
-       return(drawdown1(x, y, nasddata))
+       return(drawdown(x, y, nasddata))
 def drawdownrus(x, y):
-       return(drawdown1(x, y, russdata))
+       return(drawdown(x, y, russdata))
 
 def vixfear(x, y):
        if y in crisis_periods:

@@ -172,11 +172,15 @@ def plot_bubbles(table):
    ax.legend(frameon=False, loc="upper left", bbox_to_anchor=(1, 1))
    ax.set_title(headline, loc="left", fontweight="bold", color=INK)
    ax.axhline(1, color=MUTED, linestyle=":", linewidth=1)
-   ax.text(table["Max drawdown (%)"].min(), 1.2, "1 year", color=MUTED, fontsize=9)
+   ax.text(table["Max drawdown (%)"].min(), 0.6, "1 year", color=MUTED, fontsize=9)
    for i, row in table.iterrows():                       # one row = one bubble
         label = CRISIS_SHORT[row["Crisis"]]
         if row["Recovered"] == "No":
             label = label + " (not yet recovered)"
+        if row["Asset"] == "Gold":
+            offset = (10, -15)
+        else:
+            offset = (10, 10)
         ax.annotate(label,
                     (row["Max drawdown (%)"], row["Recovery (years)"]),
                     xytext=(10, 10), textcoords="offset points",

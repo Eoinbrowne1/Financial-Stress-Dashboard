@@ -61,10 +61,28 @@ crises = {
     "2022 Market Stress": ("2021-12-01", "2022-10-31")
 }
 
+def normal_market_correlation():
+    normal_data = returns.copy()
+
+    for start_date, end_date in crises.values():
+        normal_data = normal_data[
+            ~(
+                (normal_data["Date"] >= start_date) &
+                (normal_data["Date"] <= end_date)
+            )
+        ]
+    normal_corr = normal_data[["GLD" , "SPY", "TLT", "USO"]].corr()   
+    return normal_corr
+  
+ 
 def show_selected_crisis(selected_crisis):
     start_date, end_date = crises[selected_crisis]
     selected_corr = crisis_correlation(start_date, end_date)
     average_corr, average_abs_corr, strongest_pair, weakest_pair, strongest_value, weakest_value = correlation_summary(selected_corr)
+    normal_corr = normal_market_correlation()
+    normal_summary = correlation_summary(normal_corr)
+    normal_average_abs_corr = normal_summary[1]
+    correlation_change = average_abs_corr - normal_average_abs_corr
     fig = plot_heatmap(selected_corr, selected_crisis)
     return (
         fig,

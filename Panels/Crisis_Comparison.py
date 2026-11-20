@@ -1,2 +1,2 @@
-print("Crisis Comparison Panel")
-print("This panel compares different crises based on various metrics and visualizations.")
+import pandas as pd
+import matplotlib.pyplot as plt

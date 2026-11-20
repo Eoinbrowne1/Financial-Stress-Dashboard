@@ -69,4 +69,18 @@ def realizedvol(x, y):
                      vol_21d = round(float(realvolseries.loc[date]), 2)
                      vix_spread = round(vix_level - vol_21d, 2)
                      return(vix_spread)
-              
+
+#Banking/Financial Sector relative performance from crisis start to date 
+def finperformce(x, y):
+       if y in crisis_periods:
+              if crisis_periods[y][0] <= x <= crisis_periods[y][1]:
+                     trading_date = fsetfdata.index.asof[pd.Timestamp(x)]
+                     startdate = crisis_periods[y][0]
+                     startratio = fsetfdata.loc[startdate, "Close"] / spdata.loc[startdate, "Close"]
+                     currentratio = fsetfdata.loc[trading_date, "Close"] / spdata.loc[trading_date, "Close"]
+                     change_in_relperf_todate = round(((currentratio / startratio) - 1) * 100 , 2)
+                     return(change_in_relperf_todate)
+
+
+
+       

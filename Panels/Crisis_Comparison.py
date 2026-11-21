@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import os
 import requests
+from pathlib import Path
 
 pd.set_option("display.max_columns", None)
 pd.set_option("display.width", 200)
@@ -87,6 +88,24 @@ def get_fred_series(series_id, api_key):
         msg = resp.json().get("error_message")
         raise RuntimeError(f"FRED error {resp.status_code}: {msg}")
     return fred_json_to_series(resp.json(), series_id)
+
+
+def load_stress():
+    """Load the stress index: use the saved copy if there is one,
+    otherwise download it from FRED once and save it."""
+    cache = Path("Data") / f"fred_{STRESS_SERIES}.csv"
+
+    if cache.exists():
+        print("Using saved copy:", cache)
+        stress = pd.read_csv(cache, index_col="date", parse_dates=True)[STRESS_SERIES]
+    elif FRED_API_KEY:
+        stress = get_fred_series(STRESS_SERIES, FRED_API_KEY)
+        stress.to_csv(cache)
+        print("Downloaded once and saved:", cache)
+    else:
+        print("No key and no saved copy: stress index left out.")
+        stress = None
+    return stress
 
 
 def running_peak(prices):
@@ -227,7 +246,7 @@ def plot_bubbles(table):
 
 prices = load_prices()
 table = compare_crises(prices)
-stress = get_fred_series(STRESS_SERIES, FRED_API_KEY)
+stress = load_stress()
 print(stress.tail())
 plot_bubbles(table)
 plt.show()

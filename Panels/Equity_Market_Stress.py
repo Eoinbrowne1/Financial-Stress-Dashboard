@@ -133,14 +133,14 @@ def update(target_date: str, crisis: str):
        
        t_date = spdata.index.asof(pd.Timestamp(target_date))
        state["Date"] = t_date.strftime("%Y-%M-%D")
-
+#message if date had to be snapped to valid trading day 
        if pd.Timestamp(target_date) != t_date:
         status_text.set_text(f"Snapped {target_date} to valid\ntrading day: {state['date']}")
         status_text.set_color("#0369a1")
        else:
         status_text.set_text(f"Showing trading session:\n{state['date']}")
         status_text.set_color("#15803d")
-
+#calculate regquired metrics 
         sp_dd, nd_dd, rus_dd, vix_regime, vix_spread, fin_perf = metrics
        sp_close = round(float(spdata.loc[t_date, "Close"]), 2)
        vix_date = vixdata.index.asof(t_date)
@@ -149,7 +149,7 @@ def update(target_date: str, crisis: str):
        log_ret = np.log(spdata["Close"] / spdata["Close"].shift(1))
        rvol_series = log_ret.rolling(window=21).std() * np.sqrt(252) * 100
        vol_21d = round(float(rvol_series.loc[t_date]), 2)
-
+#set the kpi metrics to update 
        kpi_lines = (
         f"REGIME: {crisis.upper()}   |   TRADING DATE: {state['Date']}\n"
         f"S&P 500: {sp_close:,.2f}  (Drawdown: -{sp_dd:.2f}%)   |   "
@@ -159,13 +159,18 @@ def update(target_date: str, crisis: str):
         f"NDX DD: -{nd_dd:.2f}%  |  RUT DD: -{rus_dd:.2f}%")
         
        kpi_text.set_text(kpi_lines)
-
+#setting the window to be displayed on the graphs 
        win_start = max(spdata.index.min(), t_date - state["Zoom Before"])
        win_end = min(spdata.index.max(), t_date + state["Zoom After"])
 
        sp_win = spdata.loc[win_start:win_end, "Close"].copy()
        vix_win = vixdata.loc[win_start:win_end, "Close"].copy()
        rvol_win = rvol_series.loc[win_start:win_end].copy()
+#getting the peak for the window selected to calculate drawdowns 
+       crisis_start = spdata.index.asof(pd.Timestamp(crisis_periods[crisis][0]))
+       anchor_start = min(crisis_start, win_start)
+       running_peak = spdata.loc[anchor_start:win_end, "Close"].cummax().loc[win_start:win_end]       
+
 
 
     

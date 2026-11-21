@@ -249,14 +249,3 @@ def plot_bubbles(table):
                     xytext=offset, textcoords="offset points",
                     fontsize=9, color=MUTED)
    return fig
-   
-                                
-
-
-prices = load_prices()
-stress = load_stress()
-table = compare_crises(prices, stress)
-print(table[["Crisis", "Asset", "Stress index peak"]])
-plot_comparison(table)
-plot_bubbles(table)
-plt.show()

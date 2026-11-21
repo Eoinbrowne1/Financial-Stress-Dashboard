@@ -130,6 +130,7 @@ def update(target_date: str, crisis: str):
              status_text.set_color("#dc2626")
              fig.canvas.draw_idle()
              return
+       
        t_date = spdata.index.asof(pd.Timestamp(target_date))
        state["Date"] = t_date.strftime("%Y-%M-%D")
 
@@ -158,6 +159,13 @@ def update(target_date: str, crisis: str):
         f"NDX DD: -{nd_dd:.2f}%  |  RUT DD: -{rus_dd:.2f}%")
         
        kpi_text.set_text(kpi_lines)
+
+       win_start = max(spdata.index.min(), t_date - state["Zoom Before"])
+       win_end = min(spdata.index.max(), t_date + state["Zoom After"])
+
+       sp_win = spdata.loc[win_start:win_end, "Close"].copy()
+       vix_win = vixdata.loc[win_start:win_end, "Close"].copy()
+       rvol_win = rvol_series.loc[win_start:win_end].copy()
 
 
     

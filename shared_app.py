@@ -1,6 +1,8 @@
 import streamlit as st
 
-from panels.Crisis_Correlation_Heatmap import show_selected_crisis, crises
+from Panels.Crisis_Correlation_Heatmap import show_selected_crisis, crises
+from Panels.Crisis_Comparison import (load_prices, load_stress, compare_crises,
+                                      plot_comparison, plot_bubbles, CRISES)
 
 st.set_page_config(
     page_title="Financial Stress Dashboard",
@@ -21,6 +23,10 @@ with tab1:
 
 with tab2:
     st.header("Crisis Comparison")
+    prices = load_prices()
+    stress = load_stress()
+    table = compare_crises(prices, stress)
+    st.pyplot(plot_comparison(table))
 
 with tab3:
     st.header("Crisis Correlation")

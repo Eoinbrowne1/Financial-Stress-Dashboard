@@ -193,11 +193,20 @@ def update(target_date: str, crisis: str):
  #shade between daily values and high stress value (30)
        ax_vix.axhline(30, color="#dc2626", linestyle=":", linewidth=1.5, label="VIX = 30 Stress Threshold")
        ax_vix.fill_between(vix_win.index, 30, vix_win.values, where=(vix_win.values >= 30), color="#dc2626", alpha=0.16, interpolate=True)
-#add vertical line to highlight selected date
+ #add vertical line to highlight selected date
        ax_vix.axvline(t_date, color="#2563eb", linestyle="--", linewidth=1.6)
        ax_vix.scatter([t_date], [vix_level], color="#d97706", edgecolor="#1e293b", zorder=5, s=45)
        ax_vix.annotate(f" VIX: {vix_level:.2f}", xy=(t_date, vix_level), xytext=(8, 6), textcoords="offset points",
                         fontsize=9, fontweight="bold", color="#b45309", bbox=dict(boxstyle="round,pad=0.25", facecolor="#fffbeb", edgecolor="#fcd34d"))
+#add grid labels legend and date formatting
+       ax_vix.set_ylabel("Volatility (%)", fontweight="bold", color="#1e293b")
+       ax_vix.set_xlabel("Date", fontweight="bold", color="#1e293b")
+       ax_vix.grid(True, linestyle=":", alpha=0.5)
+       ax_vix.legend(loc="upper right", fontsize=8.5, framealpha=0.9)
+       ax_vix.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d"))
+       fig.autofmt_xdate(rotation=25)
+
+       fig.canvas.draw_idle()                       
 
     
              

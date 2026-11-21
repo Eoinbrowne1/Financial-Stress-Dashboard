@@ -176,7 +176,12 @@ def update(target_date: str, crisis: str):
        ax_sp.plot(running_peak.index, running_peak.values, color="#64748b", linestyle="--", linewidth=1.0, label="Regime Peak")
        ax_sp.fill_between(sp_win.index, sp_win.values, running_peak.values, where=(sp_win.values < running_peak.values),
         color="#ef4444", alpha=0.18, interpolate=True, label="Peak-to-Trough Drawdown")  
-
+#line and dot to highlight selected date and drawdown
+       ax_sp.axvline(t_date, color="#2563eb", linestyle="--", linewidth=1.6)
+       ax_sp.scatter([t_date], [sp_close], color="#2563eb", zorder=5, s=45)
+       ax_sp.annotate(f" {state['Date']}\n DD: -{sp_dd:.2f}%", xy=(t_date, sp_close), xytext=(8, -14), textcoords="offset points",
+        fontsize=9, fontweight="bold", color="#1d4ed8", bbox=dict(boxstyle="round,pad=0.25", facecolor="#eff6ff", edgecolor="#93c5fd"))
+ 
 
 
     

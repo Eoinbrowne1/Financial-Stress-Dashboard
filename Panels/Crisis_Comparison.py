@@ -232,6 +232,8 @@ def plot_bubbles(table):
                    palette=ASSET_COLOURS, alpha=0.7, ax=ax)
    ax.legend(frameon=False, loc="upper left", bbox_to_anchor=(1, 1))
    ax.set_title(headline, loc="left", fontweight="bold", color=INK)
+   ax.set_xlabel("Max drawdown (%)\nSource: Yahoo Finance daily prices (SPY, GLD, TLT, USO), 2007 onwards.",
+                  loc="left", fontsize=9)
    ax.axhline(1, color=MUTED, linestyle=":", linewidth=1)
    ax.text(table["Max drawdown (%)"].min(), 0.6, "1 year", color=MUTED, fontsize=9)
    for i, row in table.iterrows():                       # one row = one bubble

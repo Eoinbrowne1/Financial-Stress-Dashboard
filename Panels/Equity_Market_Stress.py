@@ -139,6 +139,28 @@ def update(target_date: str, crisis: str):
        else:
         status_text.set_text(f"Showing trading session:\n{state['date']}")
         status_text.set_color("#15803d")
+
+        sp_dd, nd_dd, rus_dd, vix_regime, vix_spread, fin_perf = metrics
+       sp_close = round(float(spdata.loc[t_date, "Close"]), 2)
+       vix_date = vixdata.index.asof(t_date)
+       vix_level = round(float(vixdata.loc[vix_date, "Close"]), 2)
+
+       log_ret = np.log(spdata["Close"] / spdata["Close"].shift(1))
+       rvol_series = log_ret.rolling(window=21).std() * np.sqrt(252) * 100
+       vol_21d = round(float(rvol_series.loc[t_date]), 2)
+
+       kpi_lines = (
+        f"REGIME: {crisis.upper()}   |   TRADING DATE: {state['Date']}\n"
+        f"S&P 500: {sp_close:,.2f}  (Drawdown: -{sp_dd:.2f}%)   |   "
+        f"XLF/SPX Rel. Perf: {fin_perf:+.2f}%\n"
+        f"VIX Fear: {vix_level:.2f} [{vix_regime}]   |   "
+        f"21D Realized Vol: {vol_21d:.2f}% (Spread: {vix_spread:+.2f})   |   "
+        f"NDX DD: -{nd_dd:.2f}%  |  RUT DD: -{rus_dd:.2f}%")
+        
+       kpi_text.set_text(kpi_lines)
+
+
+    
              
              
              

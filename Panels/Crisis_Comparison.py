@@ -183,11 +183,11 @@ def crisis_row(prices, stress, ticker, crisis_name, start, end):
         }
 
 
-def compare_crises(prices, stress):
+def compare_crises(prices, stress, crises=CRISES):
     """Build the full comparison table: every asset in every crisis."""
     rows = []
-    for crisis_name in CRISES:
-        start, end = CRISES[crisis_name]
+    for crisis_name in crises:
+        start, end = crises[crisis_name]
         for ticker in ASSET_NAMES:
             rows.append(crisis_row(prices, stress, ticker, crisis_name, start, end))
     return pd.DataFrame(rows)       

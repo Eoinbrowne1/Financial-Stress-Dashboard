@@ -169,7 +169,13 @@ def update(target_date: str, crisis: str):
 #getting the peak for the window selected to calculate drawdowns 
        crisis_start = spdata.index.asof(pd.Timestamp(crisis_periods[crisis][0]))
        anchor_start = min(crisis_start, win_start)
-       running_peak = spdata.loc[anchor_start:win_end, "Close"].cummax().loc[win_start:win_end]       
+       running_peak = spdata.loc[anchor_start:win_end, "Close"].cummax().loc[win_start:win_end]   
+#sp 500 panel and drawdown shading
+       ax_sp.clear()
+       ax_sp.plot(sp_win.index, sp_win.values, color="#0f172a", linewidth=1.8, label="S&P 500 Close")  
+       ax_sp.plot(running_peak.index, running_peak.values, color="#64748b", linestyle="--", linewidth=1.0, label="Regime Peak")
+       ax_sp.fill_between(sp_win.index, sp_win.values, running_peak.values, where=(sp_win.values < running_peak.values),
+        color="#ef4444", alpha=0.18, interpolate=True, label="Peak-to-Trough Drawdown")  
 
 
 

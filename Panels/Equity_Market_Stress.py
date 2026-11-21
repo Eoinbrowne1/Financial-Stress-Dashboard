@@ -181,7 +181,13 @@ def update(target_date: str, crisis: str):
        ax_sp.scatter([t_date], [sp_close], color="#2563eb", zorder=5, s=45)
        ax_sp.annotate(f" {state['Date']}\n DD: -{sp_dd:.2f}%", xy=(t_date, sp_close), xytext=(8, -14), textcoords="offset points",
         fontsize=9, fontweight="bold", color="#1d4ed8", bbox=dict(boxstyle="round,pad=0.25", facecolor="#eff6ff", edgecolor="#93c5fd"))
- 
+ #Add label grid and legend      
+       ax_sp.set_ylabel("S&P 500 Index", fontweight="bold", color="#1e293b")
+       ax_sp.grid(True, linestyle=":", alpha=0.5)
+       ax_sp.legend(loc="upper right", fontsize=8.5, framealpha=0.9)       
+       plt.setp(ax_sp.get_xticklabels(), visible=False)
+  
+
 
 
     

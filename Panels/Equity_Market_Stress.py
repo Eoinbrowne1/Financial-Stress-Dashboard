@@ -186,8 +186,11 @@ def update(target_date: str, crisis: str):
        ax_sp.grid(True, linestyle=":", alpha=0.5)
        ax_sp.legend(loc="upper right", fontsize=8.5, framealpha=0.9)       
        plt.setp(ax_sp.get_xticklabels(), visible=False)
-  
-
+ #set up vix plot 
+       ax_vix.clear()
+       ax_vix.plot(vix_win.index, vix_win.values, color="#d97706", linewidth=1.8, label="CBOE VIX")
+       ax_vix.plot(rvol_win.index, rvol_win.values, color="#475569", linestyle="-.", linewidth=1.2, label="21D Realized Vol (%)")      
+ 
 
 
     

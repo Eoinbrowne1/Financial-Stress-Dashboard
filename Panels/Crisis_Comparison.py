@@ -155,7 +155,7 @@ def recovery_days(prices, peak_date, trough_date):
         return len(prices.loc[trough_date:recovery_date]) - 1, True
 
 
-def crisis_row(prices, ticker, crisis_name, start, end):
+def crisis_row(prices, stress, ticker, crisis_name, start, end):
     """All the measures for one asset in one crisis, as one row of the table."""
     dd = max_drawdown(prices[ticker], start, end)
     vol = peak_volatility(prices[ticker], start, end)
@@ -165,6 +165,12 @@ def crisis_row(prices, ticker, crisis_name, start, end):
         recovered_text = "Yes"
     else:
         recovered_text = "No"
+
+    if stress is None:
+        stress_peak = None
+    else:
+        stress_peak = round(stress.loc[start:end].max(), 2)
+
     return {
         "Crisis": crisis_name,
         "Asset": ASSET_NAMES[ticker],
@@ -173,16 +179,17 @@ def crisis_row(prices, ticker, crisis_name, start, end):
         "Recovery (trading days)": days,
         "Recovery (years)": round(days / 252,1),
         "Recovered": recovered_text,
+        "Stress index peak": stress_peak,
         }
 
 
-def compare_crises(prices):
+def compare_crises(prices, stress):
     """Build the full comparison table: every asset in every crisis."""
     rows = []
     for crisis_name in CRISES:
         start, end = CRISES[crisis_name]
         for ticker in ASSET_NAMES:
-            rows.append(crisis_row(prices, ticker, crisis_name, start, end))
+            rows.append(crisis_row(prices, stress, ticker, crisis_name, start, end))
     return pd.DataFrame(rows)       
 
 
@@ -245,8 +252,9 @@ def plot_bubbles(table):
 
 
 prices = load_prices()
-table = compare_crises(prices)
 stress = load_stress()
-print(stress.tail())
+table = compare_crises(prices, stress)
+print(table[["Crisis", "Asset", "Stress index peak"]])
+plot_comparison(table)
 plot_bubbles(table)
 plt.show()

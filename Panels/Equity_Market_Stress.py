@@ -190,8 +190,14 @@ def update(target_date: str, crisis: str):
        ax_vix.clear()
        ax_vix.plot(vix_win.index, vix_win.values, color="#d97706", linewidth=1.8, label="CBOE VIX")
        ax_vix.plot(rvol_win.index, rvol_win.values, color="#475569", linestyle="-.", linewidth=1.2, label="21D Realized Vol (%)")      
- 
-
+ #shade between daily values and high stress value (30)
+       ax_vix.axhline(30, color="#dc2626", linestyle=":", linewidth=1.5, label="VIX = 30 Stress Threshold")
+       ax_vix.fill_between(vix_win.index, 30, vix_win.values, where=(vix_win.values >= 30), color="#dc2626", alpha=0.16, interpolate=True)
+#add vertical line to highlight selected date
+       ax_vix.axvline(t_date, color="#2563eb", linestyle="--", linewidth=1.6)
+       ax_vix.scatter([t_date], [vix_level], color="#d97706", edgecolor="#1e293b", zorder=5, s=45)
+       ax_vix.annotate(f" VIX: {vix_level:.2f}", xy=(t_date, vix_level), xytext=(8, 6), textcoords="offset points",
+                        fontsize=9, fontweight="bold", color="#b45309", bbox=dict(boxstyle="round,pad=0.25", facecolor="#fffbeb", edgecolor="#fcd34d"))
 
     
              

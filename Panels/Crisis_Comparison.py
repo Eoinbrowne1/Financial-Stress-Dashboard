@@ -2,6 +2,9 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import os
+import requests
+from pathlib import Path
 
 pd.set_option("display.max_columns", None)
 pd.set_option("display.width", 200)
@@ -48,10 +51,61 @@ plt.rcParams.update({
     "font.size":11,
 })
 
+FRED_API_KEY = os.environ.get("FRED_API_KEY","")
+
+if FRED_API_KEY:
+    print("Key found", len(FRED_API_KEY), "characters")
+else:
+    print("No key found: will use the saved copy if there is one.")
+
+FRED_BASE = "https://api.stlouisfed.org/fred/"
+STRESS_SERIES = "STLFSI4"                   #St. Louis Fed Financial stres index (weekly)
+
+
+
 def load_prices():
     """Load daily prices from market_data.csv with the dates as the index."""
     prices = pd.read_csv("Data/market_data.csv", index_col="Date", parse_dates=True)
     return prices
+
+
+def fred_json_to_series(payload, name):
+    """Turn a FRED reply into a date-indexed Series>"""
+    raw = pd.DataFrame(payload["observations"])
+    raw["date"] = pd.to_datetime(raw["date"])
+    raw["value"] = pd.to_numeric(raw["value"], errors="coerce")
+    return raw.set_index("date")["value"].rename(name)
+
+
+def get_fred_series(series_id, api_key):
+    """Download one FRED series as a pandas Series."""
+    params = {"series_id": series_id,
+              "api_key": api_key,
+              "file_type": "json"}
+    resp = requests.get(FRED_BASE + "series/observations",
+                        params=params, timeout=30)
+    if not resp.ok:
+        msg = resp.json().get("error_message")
+        raise RuntimeError(f"FRED error {resp.status_code}: {msg}")
+    return fred_json_to_series(resp.json(), series_id)
+
+
+def load_stress():
+    """Load the stress index: use the saved copy if there is one,
+    otherwise download it from FRED once and save it."""
+    cache = Path("Data") / f"fred_{STRESS_SERIES}.csv"
+
+    if cache.exists():
+        print("Using saved copy:", cache)
+        stress = pd.read_csv(cache, index_col="date", parse_dates=True)[STRESS_SERIES]
+    elif FRED_API_KEY:
+        stress = get_fred_series(STRESS_SERIES, FRED_API_KEY)
+        stress.to_csv(cache)
+        print("Downloaded once and saved:", cache)
+    else:
+        print("No key and no saved copy: stress index left out.")
+        stress = None
+    return stress
 
 
 def running_peak(prices):
@@ -101,7 +155,7 @@ def recovery_days(prices, peak_date, trough_date):
         return len(prices.loc[trough_date:recovery_date]) - 1, True
 
 
-def crisis_row(prices, ticker, crisis_name, start, end):
+def crisis_row(prices, stress, ticker, crisis_name, start, end):
     """All the measures for one asset in one crisis, as one row of the table."""
     dd = max_drawdown(prices[ticker], start, end)
     vol = peak_volatility(prices[ticker], start, end)
@@ -111,6 +165,12 @@ def crisis_row(prices, ticker, crisis_name, start, end):
         recovered_text = "Yes"
     else:
         recovered_text = "No"
+
+    if stress is None:
+        stress_peak = None
+    else:
+        stress_peak = round(stress.loc[start:end].max(), 2)
+
     return {
         "Crisis": crisis_name,
         "Asset": ASSET_NAMES[ticker],
@@ -119,16 +179,17 @@ def crisis_row(prices, ticker, crisis_name, start, end):
         "Recovery (trading days)": days,
         "Recovery (years)": round(days / 252,1),
         "Recovered": recovered_text,
+        "Stress index peak": stress_peak,
         }
 
 
-def compare_crises(prices):
+def compare_crises(prices, stress, crises=CRISES):
     """Build the full comparison table: every asset in every crisis."""
     rows = []
-    for crisis_name in CRISES:
-        start, end = CRISES[crisis_name]
+    for crisis_name in crises:
+        start, end = crises[crisis_name]
         for ticker in ASSET_NAMES:
-            rows.append(crisis_row(prices, ticker, crisis_name, start, end))
+            rows.append(crisis_row(prices, stress, ticker, crisis_name, start, end))
     return pd.DataFrame(rows)       
 
 
@@ -171,6 +232,8 @@ def plot_bubbles(table):
                    palette=ASSET_COLOURS, alpha=0.7, ax=ax)
    ax.legend(frameon=False, loc="upper left", bbox_to_anchor=(1, 1))
    ax.set_title(headline, loc="left", fontweight="bold", color=INK)
+   ax.set_xlabel("Max drawdown (%)\nSource: Yahoo Finance daily prices (SPY, GLD, TLT, USO), 2007 onwards.",
+                  loc="left", fontsize=9)
    ax.axhline(1, color=MUTED, linestyle=":", linewidth=1)
    ax.text(table["Max drawdown (%)"].min(), 0.6, "1 year", color=MUTED, fontsize=9)
    for i, row in table.iterrows():                       # one row = one bubble
@@ -186,11 +249,3 @@ def plot_bubbles(table):
                     xytext=offset, textcoords="offset points",
                     fontsize=9, color=MUTED)
    return fig
-   
-                                
-
-
-prices = load_prices()
-table = compare_crises(prices)
-plot_bubbles(table)
-plt.show()

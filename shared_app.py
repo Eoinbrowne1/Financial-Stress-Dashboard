@@ -1,6 +1,8 @@
 import streamlit as st
 
-from panels.Crisis_Correlation_Heatmap import show_selected_crisis, crises
+from Panels.Crisis_Correlation_Heatmap import show_selected_crisis, crises
+from Panels.Crisis_Comparison import (load_prices, load_stress, compare_crises,
+                                      plot_comparison, plot_bubbles, CRISES)
 
 st.set_page_config(
     page_title="Financial Stress Dashboard",
@@ -21,6 +23,30 @@ with tab1:
 
 with tab2:
     st.header("Crisis Comparison")
+    st.write("Which financial crisis was most severe, and how did the crises differ")
+
+    chart_type = st.radio("Chart", ["Compare one measure", "Overall severity (bubbles)"],
+                          horizontal=True)
+    chosen_names = st.multiselect("Crises to include", list(CRISES.keys()),
+                                  default=list(CRISES.keys()))
+    chosen_crises = {}
+    for name in chosen_names:
+        chosen_crises[name] = CRISES[name]
+
+    if len(chosen_crises) == 0:
+        st.warning("Pick at least one crisis.")
+    else:
+        prices = load_prices()
+        stress = load_stress()
+        table = compare_crises(prices, stress, chosen_crises)
+
+        if chart_type == "Compare one measure":
+            measure = st.selectbox("Measure", ["Max drawdown (%)",
+                                               "Peak yearly volatility (%)",
+                                               "Recovery (years)"])
+            st.pyplot(plot_comparison(table, measure))
+        else:
+            st.pyplot(plot_bubbles(table))
 
 with tab3:
     st.header("Crisis Correlation")

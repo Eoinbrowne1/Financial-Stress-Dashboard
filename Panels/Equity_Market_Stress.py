@@ -223,6 +223,13 @@ def step_days(delta_days: int):
     new_dt = (pd.Timestamp(state["Date"]) + pd.Timedelta(days=delta_days)).strftime("%Y-%m-%d")
     text_date.set_val(new_dt)
     update(new_dt, state["Crisis"])
+
+
+#button to select crisis period
+fig.text(0.03, 0.75, "1. Select Crisis Regime", fontweight="bold", fontsize=10.5, color="#1e293b")
+ax_radio = fig.add_axes([0.03, 0.56, 0.18, 0.17], facecolor="#ffffff")
+radio_crisis = RadioButtons(ax_radio, list(crisis_periods.keys()), active=0)
+radio_crisis.on_clicked(on_crisis_change)    
     
        
              

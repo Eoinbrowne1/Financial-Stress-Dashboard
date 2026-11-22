@@ -48,6 +48,13 @@ with tab2:
         else:
             st.pyplot(plot_bubbles(table))
 
+        st.write("**Financial Stress Index peak** (St. Louis Fed, 0 = normal)")
+        cols = st.columns(len(chosen_crises))              # one column per crisis
+        for i, name in enumerate(chosen_crises):
+            crisis_rows = table[table["Crisis"] == name]   # this crisis's rows
+            peak = crisis_rows["Stress index peak"].iloc[0]
+            cols[i].metric(name, peak)
+
 with tab3:
     st.header("Crisis Correlation")
     selected_crisis = st.selectbox(

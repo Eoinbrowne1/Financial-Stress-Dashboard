@@ -195,19 +195,24 @@ def compare_crises(prices, stress, crises=CRISES):
 
 def plot_comparison(table, measure="Max drawdown (%)"):
     """Grouped bar chart: one group of bars per crisis, one bar per asset."""
-    # Find the worst row, so the title can state the finding
     if measure == "Max drawdown (%)":
-        ranked = table.sort_values(measure)
-    else:
-        ranked = table.sort_values(measure, ascending= False)
-    worst = ranked.iloc[0]
+        worst = table.sort_values(measure).iloc[0]                     
+        headline = f"{worst['Asset']} was hit hardest: {worst[measure]:.1f}% in the {worst['Crisis']}"
+    elif measure == "Peak yearly volatility (%)":
+        worst = table.sort_values(measure, ascending=False).iloc[0]    
+        headline = f"{worst['Asset']} swung the most: {worst[measure]:.0f}% yearly volatility in the {worst['Crisis']}"
+    else:                                                              
+        worst = table.sort_values(measure, ascending=False).iloc[0]    
+        if worst["Recovered"] == "No":
+            headline = f"{worst['Asset']} has still not recovered from the {worst['Crisis']} ({worst[measure]:.1f} years so far)"
+        else:
+            headline = f"{worst['Asset']} took longest to recover: {worst[measure]:.1f} years after the {worst['Crisis']}"
 
     fig, ax = plt.subplots(figsize=(11, 5), layout="constrained")
     sns.barplot(data=table, x="Crisis", y=measure, hue="Asset",
                 palette=ASSET_COLOURS, errorbar=None, ax=ax)
     ax.axhline(0, color="grey")
-    ax.set_title(f"{worst['Asset']} was hit hardest: {worst[measure]:.1f}% in the {worst['Crisis']}",
-                 loc="left", fontweight="bold", color=INK)
+    ax.set_title(headline, loc="left", fontweight="bold", color=INK)
     ax.set_xlabel("Source: Yahoo Finance daily prices (SPY, GLD, TLT, USO), 2007 onwards.",
                   loc="left", fontsize=9)
     ax.legend(frameon=False, loc="upper left", bbox_to_anchor=(1, 1), title="Asset")

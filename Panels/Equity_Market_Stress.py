@@ -31,7 +31,7 @@ russdata = pd.read_csv("russ.csv", index_col= 0, parse_dates= True, skiprows=[1,
 #function for calculating drawdowns, x is date y is crisis z is data
 def drawdown(x, y, z):
        if y in crisis_periods:
-              if z.index.asof(pd.Timestamp(crisis_periods[y][0])) <= x <= z.index.asof(pd.Timestamp(crisis_periods[y][1])):
+              if z.index.asof(pd.Timestamp(crisis_periods[y][0])) <= pd.Timestamp(x) <= z.index.asof(pd.Timestamp(crisis_periods[y][1])):
                      trading_date = z.index.asof(pd.Timestamp(x))
                      dates = z.loc[z.index.asof(pd.Timestamp(crisis_periods[y][0])):trading_date]
                      dateprice = z.loc[trading_date, "Close"].copy()
@@ -54,7 +54,7 @@ def drawdownrus(x, y):
 
 def vixfear(x, y):
        if y in crisis_periods:
-              if vixdata.index.asof(pd.Timestamp(crisis_periods[y][0])) <= x <= vixdata.index.asof(pd.Timestamp(crisis_periods[y][1])):
+              if vixdata.index.asof(pd.Timestamp(crisis_periods[y][0])) <= pd.Timestamp(x) <= vixdata.index.asof(pd.Timestamp(crisis_periods[y][1])):
                 date = vixdata.index.asof(pd.Timestamp(x))             
                 vix_level = round(float(vixdata.loc[date, "Close"]), 2)
                 if vix_level >= 40:
@@ -73,7 +73,7 @@ def vixfear(x, y):
 #21 day annualized realized volatility log returns
 def realizedvol(x, y):
        if y in crisis_periods:
-              if vixdata.index.asof(pd.Timestamp(crisis_periods[y][0])) <= x <= vixdata.index.asof(pd.Timestamp(crisis_periods[y][1])):
+              if vixdata.index.asof(pd.Timestamp(crisis_periods[y][0])) <= pd.Timestamp(x) <= vixdata.index.asof(pd.Timestamp(crisis_periods[y][1])):
                      date = vixdata.index.asof(pd.Timestamp(x))
                      vix_level = float(vixdata.loc[date, "Close"])
                      log_ret = np.log(spdata["Close"] / spdata["Close"].shift(1))
@@ -89,7 +89,7 @@ def realizedvol(x, y):
 #Banking/Financial Sector relative performance from crisis start to date 
 def finperformance(x, y):
        if y in crisis_periods:
-              if fsetfdata.index.asof(pd.Timestamp(crisis_periods[y][0])) <= x <= fsetfdata.index.asof(pd.Timestamp(crisis_periods[y][1])):
+              if fsetfdata.index.asof(pd.Timestamp(crisis_periods[y][0])) <= pd.Timestamp(x) <= fsetfdata.index.asof(pd.Timestamp(crisis_periods[y][1])):
                      trading_date = fsetfdata.index.asof(pd.Timestamp(x))
                      startdate = fsetfdata.index.asof(pd.Timestamp(crisis_periods[y][0]))
                      startratio = fsetfdata.loc[startdate, "Close"] / spdata.loc[startdate, "Close"]
@@ -235,4 +235,14 @@ fig.text(0.03, 0.49, "2. Inspect Date (YYYY-MM-DD)", fontweight="bold", fontsize
 ax_textbox = fig.add_axes([0.03, 0.43, 0.18, 0.045])
 text_date = TextBox(ax_textbox, "", initial=state["Date"])
 text_date.on_submit(on_date_submit)
-             
+
+ax_prev = fig.add_axes([0.03, 0.36, 0.085, 0.045])
+ax_next = fig.add_axes([0.125, 0.36, 0.085, 0.045])
+btn_prev = Button(ax_prev, "< -5 Days", color="#e2e8f0", hovercolor="#cbd5e1")
+btn_next = Button(ax_next, "+5 Days >", color="#e2e8f0", hovercolor="#cbd5e1")
+btn_prev.on_clicked(lambda _: step_days(-5))
+btn_next.on_clicked(lambda _: step_days(5))
+
+# Draw initial view and launch dashboard window
+update(state["Date"], state["Crisis"])
+plt.show()

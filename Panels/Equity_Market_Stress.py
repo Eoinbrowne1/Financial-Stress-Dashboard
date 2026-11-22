@@ -230,7 +230,9 @@ fig.text(0.03, 0.75, "1. Select Crisis Regime", fontweight="bold", fontsize=10.5
 ax_radio = fig.add_axes([0.03, 0.56, 0.18, 0.17], facecolor="#ffffff")
 radio_crisis = RadioButtons(ax_radio, list(crisis_periods.keys()), active=0)
 radio_crisis.on_clicked(on_crisis_change)    
-    
-       
-             
+#button for selecting date
+fig.text(0.03, 0.49, "2. Inspect Date (YYYY-MM-DD)", fontweight="bold", fontsize=10.5, color="#1e293b")
+ax_textbox = fig.add_axes([0.03, 0.43, 0.18, 0.045])
+text_date = TextBox(ax_textbox, "", initial=state["Date"])
+text_date.on_submit(on_date_submit)
              

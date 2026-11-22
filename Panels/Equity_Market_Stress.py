@@ -205,10 +205,10 @@ def update(target_date: str, crisis: str):
        ax_vix.legend(loc="upper right", fontsize=8.5, framealpha=0.9)
        ax_vix.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d"))
        fig.autofmt_xdate(rotation=25)
-
+#get figures to render only once
        fig.canvas.draw_idle()                       
 
     
-             
+       
              
              

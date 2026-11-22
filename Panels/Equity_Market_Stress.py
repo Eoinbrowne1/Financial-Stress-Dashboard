@@ -206,7 +206,14 @@ def update(target_date: str, crisis: str):
        ax_vix.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d"))
        fig.autofmt_xdate(rotation=25)
 #get figures to render only once
-       fig.canvas.draw_idle()                       
+       fig.canvas.draw_idle()        
+
+# function for interactive controls to update plotting function
+def on_crisis_change(label: str):
+    state["Crisis"] = label
+    default_dt = default_dates[label]
+    text_date.set_val(default_dt)
+    update(default_dt, label)
 
     
        

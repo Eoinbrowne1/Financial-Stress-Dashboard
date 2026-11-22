@@ -14,7 +14,7 @@ tickers = {"^VIX":"CBOE Volatility Index", "^GSPC":"S&P 500 Index", "XLF":"Finan
 #Crisis periods as agreed on
 crisis_periods = {"2008 Financial Crisis":("2007-10-1", "2009-03-31"),
                   "COVID-19 Crash":("2020-02-01", "2020-04-30"),
-                  "2022 Market Sress":("2021-12-01", "2022-10-31")}
+                  "2022 Market Stress":("2021-12-01", "2022-10-31")}
 
 #Default dates before any are selected
 default_dates = {"2008 Financial Crisis":"2008-07-02",
@@ -132,13 +132,13 @@ def update(target_date: str, crisis: str):
              return
        
        t_date = spdata.index.asof(pd.Timestamp(target_date))
-       state["Date"] = t_date.strftime("%Y-%M-%D")
+       state["Date"] = t_date.strftime("%Y-%m-%d")
 #message if date had to be snapped to valid trading day 
        if pd.Timestamp(target_date) != t_date:
-        status_text.set_text(f"Snapped {target_date} to valid\ntrading day: {state['date']}")
+        status_text.set_text(f"Snapped {target_date} to valid\ntrading day: {state['Date']}")
         status_text.set_color("#0369a1")
        else:
-        status_text.set_text(f"Showing trading session:\n{state['date']}")
+        status_text.set_text(f"Showing trading session:\n{state['Date']}")
         status_text.set_color("#15803d")
 #calculate regquired metrics 
         sp_dd, nd_dd, rus_dd, vix_regime, vix_spread, fin_perf = metrics
@@ -214,7 +214,15 @@ def on_crisis_change(label: str):
     default_dt = default_dates[label]
     text_date.set_val(default_dt)
     update(default_dt, label)
+#functions for changing date
+def on_date_submit(text: str):
+    update(text.strip(), state["Crisis"])
 
+
+def step_days(delta_days: int):
+    new_dt = (pd.Timestamp(state["Date"]) + pd.Timedelta(days=delta_days)).strftime("%Y-%m-%d")
+    text_date.set_val(new_dt)
+    update(new_dt, state["Crisis"])
     
        
              

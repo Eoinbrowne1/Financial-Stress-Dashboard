@@ -25,6 +25,10 @@ spdata = pd.read_csv("sp.csv", index_col= 0, parse_dates= True, skiprows=[1,2])
 fsetfdata = pd.read_csv("fsetf.csv", index_col= 0, parse_dates= True, skiprows=[1,2])
 nasddata = pd.read_csv("nasd.csv", index_col= 0, parse_dates= True, skiprows=[1,2])
 russdata = pd.read_csv("russ.csv", index_col= 0, parse_dates= True, skiprows=[1,2])
+#make sure there are no duplicate timestamp rows
+for df in [vixdata, spdata, fsetfdata, nasddata, russdata]:
+    df.sort_index(inplace=True)
+    df.drop(index=df.index[df.index.duplicated(keep="last")], inplace=True)
 
 #function for calculating drawdowns, x is date y is crisis z is data
 def drawdown(x, y, z):
@@ -131,6 +135,7 @@ def update(target_date: str, crisis: str):
        
        t_date = spdata.index.asof(pd.Timestamp(target_date))
        state["Date"] = t_date.strftime("%Y-%m-%d")
+
 #message if date had to be snapped to valid trading day 
        if pd.Timestamp(target_date) != t_date:
         status_text.set_text(f"Snapped {target_date} to valid\ntrading day: {state['Date']}")
@@ -203,23 +208,24 @@ def update(target_date: str, crisis: str):
        ax_vix.legend(loc="upper right", fontsize=8.5, framealpha=0.9)
        ax_vix.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d"))
        fig.autofmt_xdate(rotation=25)
-#get figures to render only once
-       fig.canvas.draw_idle()        
+#make date snpping work without having to click twice
+       text_date.eventson = False
+       text_date.set_val(state["Date"])
+       text_date.capturekeystrokes = False
+       text_date.eventson = True        
+       fig.canvas.draw()       
 
 # function for interactive controls to update plotting function
 def on_crisis_change(label: str):
     state["Crisis"] = label
-    default_dt = default_dates[label]
-    text_date.set_val(default_dt)
-    update(default_dt, label)
+    update(default_dates[label], label)
 #functions for changing date
 def on_date_submit(text: str):
-    update(text.strip(), state["Crisis"])
-
+    if text.strip() != state["Date"]:
+        update(text.strip(), state["Crisis"])
 
 def step_days(delta_days: int):
     new_dt = (pd.Timestamp(state["Date"]) + pd.Timedelta(days=delta_days)).strftime("%Y-%m-%d")
-    text_date.set_val(new_dt)
     update(new_dt, state["Crisis"])
 
 

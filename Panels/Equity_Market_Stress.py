@@ -46,18 +46,22 @@ crisis_events = {
                            "2022-08-26": "Powell Jackson Hole",
                            "2022-09-13": "Hot CPI print",
                            "2022-10-12": "Market bottom"},}
-#prepping data for use in date calling functions
-vixdata = pd.read_csv("vix.csv", index_col= 0, parse_dates= True, skiprows=[1,2])
-spdata = pd.read_csv("sp.csv", index_col= 0, parse_dates= True, skiprows=[1,2])
-fsetfdata = pd.read_csv("fsetf.csv", index_col= 0, parse_dates= True, skiprows=[1,2])
-nasddata = pd.read_csv("nasd.csv", index_col= 0, parse_dates= True, skiprows=[1,2])
-russdata = pd.read_csv("russ.csv", index_col= 0, parse_dates= True, skiprows=[1,2])
-#make sure there are no duplicate timestamp rows
-vixdata = vixdata[~vixdata.index.duplicated(keep="last")].sort_index()
-spdata = spdata[~spdata.index.duplicated(keep="last")].sort_index()
-fsetfdata = fsetfdata[~fsetfdata.index.duplicated(keep="last")].sort_index()
-nasddata = nasddata[~nasddata.index.duplicated(keep="last")].sort_index()
-russdata = russdata[~russdata.index.duplicated(keep="last")].sort_index()
+
+DATA_DIR = Path(__file__).parent.parent / "data"
+
+def load_prices(filename: str) -> pd.DataFrame:
+    try:
+        data = pd.read_csv(DATA_DIR / filename, index_col=0, parse_dates=True, skiprows=[1, 2])
+    except FileNotFoundError:
+        raise SystemExit(f"Data file not found: {DATA_DIR / filename}\n"
+                         f"Make sure {filename} is in the same folder as this script.")
+    return data[~data.index.duplicated(keep="last")].sort_index()
+
+vixdata = load_prices("vix.csv")
+spdata = load_prices("sp.csv")
+fsetfdata = load_prices("fsetf.csv")
+nasddata = load_prices("nasd.csv")
+russdata = load_prices("russ.csv")
   
 #function for calculating drawdowns, x is date y is crisis z is data
 def drawdown(x, y, z):

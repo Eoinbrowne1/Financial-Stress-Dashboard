@@ -27,23 +27,35 @@ with tab2:
 
     chart_type = st.radio("Chart", ["Compare one measure", "Overall severity (bubbles)"],
                           horizontal=True)
+    
     chosen_names = st.multiselect("Crises to include", list(CRISES.keys()),
                                   default=list(CRISES.keys()))
     chosen_crises = {}
     for name in chosen_names:
         chosen_crises[name] = CRISES[name]
 
+    if chart_type == "Compare one measure":
+        measure = st.selectbox("Measure", ["Max drawdown (%)",
+                                                   "Peak yearly volatility (%)",
+                                                   "Recovery (years)"])
+    else:
+        measure = None
+
+    if chart_type == "Overall severity (bubbles)" or measure == "Peak yearly volatility (%)":
+        window = st.slider("Volatility window (trading days)",
+                           min_value=5, max_value=63, value=21,
+                           help="21 days is about 1 month. Shorter windows catch sharper spikes.")
+    else:
+        window = 21  
+
     if len(chosen_crises) == 0:
         st.warning("Pick at least one crisis.")
     else:
         prices = load_prices()
         stress = load_stress()
-        table = compare_crises(prices, stress, chosen_crises)
+        table = compare_crises(prices, stress, chosen_crises, window)
 
         if chart_type == "Compare one measure":
-            measure = st.selectbox("Measure", ["Max drawdown (%)",
-                                               "Peak yearly volatility (%)",
-                                               "Recovery (years)"])
             st.pyplot(plot_comparison(table, measure))
         else:
             st.pyplot(plot_bubbles(table))

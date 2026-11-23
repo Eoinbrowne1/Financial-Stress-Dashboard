@@ -1,3 +1,18 @@
+"""
+Crisis Comparison panel: Sean O'Neill
+
+Answers: "Which financial crisis was most severe, and how did the crises differ?"
+
+Calculates max drawdown, peak yearly volatility, recovery time and the
+Financial Stress Index peak for each asset in each crisis. None of the 
+statistics are typed in manually:every number is calculated from the 
+raw daily prices, so adding a crisis to CRISES updates the table and 
+charts automatically.
+
+Data: Yahoo Finance daily prices (Data/market_data.csv) and the St. Louis Fed
+Financial Stress Index from the FRED API (saved in Data/fred_STLFSI4.csv).
+"""
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -70,7 +85,7 @@ def load_prices():
 
 
 def fred_json_to_series(payload, name):
-    """Turn a FRED reply into a date-indexed Series>"""
+    """Turn a FRED reply into a date-indexed Series."""
     raw = pd.DataFrame(payload["observations"])
     raw["date"] = pd.to_datetime(raw["date"])
     raw["value"] = pd.to_numeric(raw["value"], errors="coerce")
@@ -155,10 +170,10 @@ def recovery_days(prices, peak_date, trough_date):
         return len(prices.loc[trough_date:recovery_date]) - 1, True
 
 
-def crisis_row(prices, stress, ticker, crisis_name, start, end):
+def crisis_row(prices, stress, ticker, crisis_name, start, end, window=21):
     """All the measures for one asset in one crisis, as one row of the table."""
     dd = max_drawdown(prices[ticker], start, end)
-    vol = peak_volatility(prices[ticker], start, end)
+    vol = peak_volatility(prices[ticker], start, end, window)
     days, recovered = recovery_days(prices[ticker], dd["peak_date"], dd["trough_date"])
 
     if recovered:
@@ -183,13 +198,13 @@ def crisis_row(prices, stress, ticker, crisis_name, start, end):
         }
 
 
-def compare_crises(prices, stress, crises=CRISES):
+def compare_crises(prices, stress, crises=CRISES, window=21):
     """Build the full comparison table: every asset in every crisis."""
     rows = []
     for crisis_name in crises:
         start, end = crises[crisis_name]
         for ticker in ASSET_NAMES:
-            rows.append(crisis_row(prices, stress, ticker, crisis_name, start, end))
+            rows.append(crisis_row(prices, stress, ticker, crisis_name, start, end, window))
     return pd.DataFrame(rows)       
 
 

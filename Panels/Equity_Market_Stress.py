@@ -114,7 +114,8 @@ def finperformance(x, y):
 state = {"Crisis":"2008 Financial Crisis", 
          "Date":default_dates["2008 Financial Crisis"],
          "Zoom Before":pd.Timedelta(days=30),
-         "Zoom After":pd.Timedelta(days=30)}
+         "Zoom After":pd.Timedelta(days=30), 
+         "Syncing":False}
 
 plt.rcParams["font.sans-serif"] = "Segoe UI"
 fig = plt.figure(figsize = (14, 8.5), facecolor= "#f8fafc")
@@ -132,89 +133,92 @@ def update(target_date: str, crisis: str):
        try:
             metrics = (drawdownsp(target_date, crisis), drawdownnd(target_date, crisis), drawdownrus(target_date, crisis),
                          vixfear(target_date, crisis), realizedvol(target_date, crisis), finperformance(target_date, crisis))
+            t_date = spdata.index.asof(pd.Timestamp(target_date))
+            state["Date"] = t_date.strftime("%Y-%m-%d")
+            state["Syncing"] = True
+            text_date.set_val(state["Date"])
+            state["Syncing"] = False
+            
+            #message if date had to be snapped to valid trading day 
+            if pd.Timestamp(target_date) != t_date:
+                    status_text.set_text(f"Snapped {target_date} to valid\ntrading day: {state['Date']}")
+                    status_text.set_color("#0369a1")
+            else:
+                    status_text.set_text(f"Showing trading session:\n{state['Date']}")
+                    status_text.set_color("#15803d")
+            #calculate required metrics 
+                    sp_dd, nd_dd, rus_dd, vix_regime, vix_spread, fin_perf = metrics
+            sp_close = round(float(spdata.loc[t_date, "Close"]), 2)
+            vix_date = vixdata.index.asof(t_date)
+            vix_level = round(float(vixdata.loc[vix_date, "Close"]), 2)
+            
+            log_ret = np.log(spdata["Close"] / spdata["Close"].shift(1))
+            rvol_series = log_ret.rolling(window=21).std() * np.sqrt(252) * 100
+            vol_21d = round(float(rvol_series.loc[t_date]), 2)
+            #set the kpi metrics to update 
+            kpi_lines = (
+                f"REGIME: {crisis.upper()}   |   TRADING DATE: {state['Date']}\n"
+                f"S&P 500: {sp_close:,.2f}  (Drawdown: {sp_dd:.2f}%)   |   "
+                f"XLF/SPX Rel. Perf: {fin_perf:+.2f}%\n"
+                f"VIX Fear: {vix_level:.2f} [{vix_regime}]   |   "
+                f"21D Realized Vol: {vol_21d:.2f}% (Spread: {vix_spread:+.2f})   |   "
+                f"NDX DD: {nd_dd:.2f}%  |  RUT DD: {rus_dd:.2f}%")
+                    
+            kpi_text.set_text(kpi_lines)
+            #setting the window to be displayed on the graphs 
+            win_start = max(spdata.index.min(), t_date - state["Zoom Before"])
+            win_end = min(spdata.index.max(), t_date + state["Zoom After"])
+            
+            sp_win = spdata.loc[win_start:win_end, "Close"].copy()
+            vix_win = vixdata.loc[win_start:win_end, "Close"].copy()
+            rvol_win = rvol_series.loc[win_start:win_end].copy()
+            #getting the peak for the window selected to calculate drawdowns 
+            crisis_start = spdata.index.asof(pd.Timestamp(crisis_periods[crisis][0]))
+            anchor_start = min(crisis_start, win_start)
+            running_peak = spdata.loc[anchor_start:win_end, "Close"].cummax().loc[win_start:win_end]   
+            #sp 500 panel and drawdown shading
+            ax_sp.clear()
+            ax_sp.plot(sp_win.index, sp_win.values, color="#0f172a", linewidth=1.8, label="S&P 500 Close")  
+            ax_sp.plot(running_peak.index, running_peak.values, color="#64748b", linestyle="--", linewidth=1.0, label="Regime Peak")
+            ax_sp.fill_between(sp_win.index, sp_win.values, running_peak.values, where=(sp_win.values < running_peak.values),
+                color="#ef4444", alpha=0.18, interpolate=True, label="Peak-to-Trough Drawdown")  
+            #line and dot to highlight selected date and drawdown
+            ax_sp.axvline(t_date, color="#2563eb", linestyle="--", linewidth=1.6)
+            ax_sp.scatter([t_date], [sp_close], color="#2563eb", zorder=5, s=45)
+            ax_sp.annotate(f" {state['Date']}\n DD: -{sp_dd:.2f}%", xy=(t_date, sp_close), xytext=(8, -14), textcoords="offset points",
+                fontsize=9, fontweight="bold", color="#1d4ed8", bbox=dict(boxstyle="round,pad=0.25", facecolor="#eff6ff", edgecolor="#93c5fd"))
+             #Add label grid and legend      
+            ax_sp.set_ylabel("S&P 500 Index", fontweight="bold", color="#1e293b")
+            ax_sp.grid(True, linestyle=":", alpha=0.5)
+            ax_sp.legend(loc="upper right", fontsize=8.5, framealpha=0.9)       
+            plt.setp(ax_sp.get_xticklabels(), visible=False)
+             #set up vix plot 
+            ax_vix.clear()
+            ax_vix.plot(vix_win.index, vix_win.values, color="#d97706", linewidth=1.8, label="CBOE VIX")
+            ax_vix.plot(rvol_win.index, rvol_win.values, color="#475569", linestyle="-.", linewidth=1.2, label="21D Realized Vol (%)")      
+             #shade between daily values and high stress value (30)
+            ax_vix.axhline(30, color="#dc2626", linestyle=":", linewidth=1.5, label="VIX = 30 Stress Threshold")
+            ax_vix.fill_between(vix_win.index, 30, vix_win.values, where=(vix_win.values >= 30), color="#dc2626", alpha=0.16, interpolate=True)
+             #add vertical line to highlight selected date
+            ax_vix.axvline(t_date, color="#2563eb", linestyle="--", linewidth=1.6)
+            ax_vix.scatter([t_date], [vix_level], color="#d97706", edgecolor="#1e293b", zorder=5, s=45)
+            ax_vix.annotate(f" VIX: {vix_level:.2f}", xy=(t_date, vix_level), xytext=(8, 6), textcoords="offset points",
+                                    fontsize=9, fontweight="bold", color="#b45309", bbox=dict(boxstyle="round,pad=0.25", facecolor="#fffbeb", edgecolor="#fcd34d"))
+            #add grid labels legend and date formatting
+            ax_vix.set_ylabel("Volatility (%)", fontweight="bold", color="#1e293b")
+            ax_vix.set_xlabel("Date", fontweight="bold", color="#1e293b")
+            ax_vix.grid(True, linestyle=":", alpha=0.5)
+            ax_vix.legend(loc="upper right", fontsize=8.5, framealpha=0.9)
+            ax_vix.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d"))
+            fig.autofmt_xdate(rotation=25)
+                   
+            fig.canvas.draw()       
+
        except Exception as exc:
              status_text.set_text(f"Input error:\n{exc}")
              status_text.set_color("#dc2626")
              fig.canvas.draw_idle()
-             return
-       
-       t_date = spdata.index.asof(pd.Timestamp(target_date))
-       state["Date"] = t_date.strftime("%Y-%m-%d")
-
-#message if date had to be snapped to valid trading day 
-       if pd.Timestamp(target_date) != t_date:
-        status_text.set_text(f"Snapped {target_date} to valid\ntrading day: {state['Date']}")
-        status_text.set_color("#0369a1")
-       else:
-        status_text.set_text(f"Showing trading session:\n{state['Date']}")
-        status_text.set_color("#15803d")
-#calculate required metrics 
-        sp_dd, nd_dd, rus_dd, vix_regime, vix_spread, fin_perf = metrics
-       sp_close = round(float(spdata.loc[t_date, "Close"]), 2)
-       vix_date = vixdata.index.asof(t_date)
-       vix_level = round(float(vixdata.loc[vix_date, "Close"]), 2)
-
-       log_ret = np.log(spdata["Close"] / spdata["Close"].shift(1))
-       rvol_series = log_ret.rolling(window=21).std() * np.sqrt(252) * 100
-       vol_21d = round(float(rvol_series.loc[t_date]), 2)
-#set the kpi metrics to update 
-       kpi_lines = (
-        f"REGIME: {crisis.upper()}   |   TRADING DATE: {state['Date']}\n"
-        f"S&P 500: {sp_close:,.2f}  (Drawdown: {sp_dd:.2f}%)   |   "
-        f"XLF/SPX Rel. Perf: {fin_perf:+.2f}%\n"
-        f"VIX Fear: {vix_level:.2f} [{vix_regime}]   |   "
-        f"21D Realized Vol: {vol_21d:.2f}% (Spread: {vix_spread:+.2f})   |   "
-        f"NDX DD: {nd_dd:.2f}%  |  RUT DD: {rus_dd:.2f}%")
-        
-       kpi_text.set_text(kpi_lines)
-#setting the window to be displayed on the graphs 
-       win_start = max(spdata.index.min(), t_date - state["Zoom Before"])
-       win_end = min(spdata.index.max(), t_date + state["Zoom After"])
-
-       sp_win = spdata.loc[win_start:win_end, "Close"].copy()
-       vix_win = vixdata.loc[win_start:win_end, "Close"].copy()
-       rvol_win = rvol_series.loc[win_start:win_end].copy()
-#getting the peak for the window selected to calculate drawdowns 
-       crisis_start = spdata.index.asof(pd.Timestamp(crisis_periods[crisis][0]))
-       anchor_start = min(crisis_start, win_start)
-       running_peak = spdata.loc[anchor_start:win_end, "Close"].cummax().loc[win_start:win_end]   
-#sp 500 panel and drawdown shading
-       ax_sp.clear()
-       ax_sp.plot(sp_win.index, sp_win.values, color="#0f172a", linewidth=1.8, label="S&P 500 Close")  
-       ax_sp.plot(running_peak.index, running_peak.values, color="#64748b", linestyle="--", linewidth=1.0, label="Regime Peak")
-       ax_sp.fill_between(sp_win.index, sp_win.values, running_peak.values, where=(sp_win.values < running_peak.values),
-        color="#ef4444", alpha=0.18, interpolate=True, label="Peak-to-Trough Drawdown")  
-#line and dot to highlight selected date and drawdown
-       ax_sp.axvline(t_date, color="#2563eb", linestyle="--", linewidth=1.6)
-       ax_sp.scatter([t_date], [sp_close], color="#2563eb", zorder=5, s=45)
-       ax_sp.annotate(f" {state['Date']}\n DD: -{sp_dd:.2f}%", xy=(t_date, sp_close), xytext=(8, -14), textcoords="offset points",
-        fontsize=9, fontweight="bold", color="#1d4ed8", bbox=dict(boxstyle="round,pad=0.25", facecolor="#eff6ff", edgecolor="#93c5fd"))
- #Add label grid and legend      
-       ax_sp.set_ylabel("S&P 500 Index", fontweight="bold", color="#1e293b")
-       ax_sp.grid(True, linestyle=":", alpha=0.5)
-       ax_sp.legend(loc="upper right", fontsize=8.5, framealpha=0.9)       
-       plt.setp(ax_sp.get_xticklabels(), visible=False)
- #set up vix plot 
-       ax_vix.clear()
-       ax_vix.plot(vix_win.index, vix_win.values, color="#d97706", linewidth=1.8, label="CBOE VIX")
-       ax_vix.plot(rvol_win.index, rvol_win.values, color="#475569", linestyle="-.", linewidth=1.2, label="21D Realized Vol (%)")      
- #shade between daily values and high stress value (30)
-       ax_vix.axhline(30, color="#dc2626", linestyle=":", linewidth=1.5, label="VIX = 30 Stress Threshold")
-       ax_vix.fill_between(vix_win.index, 30, vix_win.values, where=(vix_win.values >= 30), color="#dc2626", alpha=0.16, interpolate=True)
- #add vertical line to highlight selected date
-       ax_vix.axvline(t_date, color="#2563eb", linestyle="--", linewidth=1.6)
-       ax_vix.scatter([t_date], [vix_level], color="#d97706", edgecolor="#1e293b", zorder=5, s=45)
-       ax_vix.annotate(f" VIX: {vix_level:.2f}", xy=(t_date, vix_level), xytext=(8, 6), textcoords="offset points",
-                        fontsize=9, fontweight="bold", color="#b45309", bbox=dict(boxstyle="round,pad=0.25", facecolor="#fffbeb", edgecolor="#fcd34d"))
-#add grid labels legend and date formatting
-       ax_vix.set_ylabel("Volatility (%)", fontweight="bold", color="#1e293b")
-       ax_vix.set_xlabel("Date", fontweight="bold", color="#1e293b")
-       ax_vix.grid(True, linestyle=":", alpha=0.5)
-       ax_vix.legend(loc="upper right", fontsize=8.5, framealpha=0.9)
-       ax_vix.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d"))
-       fig.autofmt_xdate(rotation=25)
-       
-       fig.canvas.draw()       
+             return            
 
 # function for interactive controls to update plotting function
 def on_crisis_change(label: str):
@@ -222,14 +226,26 @@ def on_crisis_change(label: str):
     update(default_dates[label], label)
 #functions for changing date
 def on_date_submit(text: str):
+    if state["Syncing"]:
+          return
     cleaned = text.strip()
     if cleaned:
           update(cleaned, state["Crisis"])
 
 def step_days(delta_days: int):
-    new_dt = (pd.Timestamp(state["Date"]) + pd.Timedelta(days=delta_days)).strftime("%Y-%m-%d")
-    update(new_dt, state["Crisis"])
+    # Only the trading days inside the selected crisis window
+    start, end = crisis_periods[state["Crisis"]]
+    trading_days = list(spdata.loc[start:end].index)
 
+    # Position of the current date in that list
+    current = spdata.index.asof(pd.Timestamp(state["Date"]))
+    pos = trading_days.index(current)
+
+    # Move by N trading days, staying inside the crisis window
+    new_pos = max(0, min(pos + delta_days, len(trading_days) - 1))
+    new_dt = trading_days[new_pos].strftime("%Y-%m-%d")
+
+    update(new_dt, state["Crisis"])
 #button to select crisis period
 fig.text(0.02, 0.75, "1. Select Crisis Regime", fontweight="bold", fontsize=10.5, color="#1e293b")
 ax_radio = fig.add_axes([0.02, 0.56, 0.17, 0.17], facecolor="#ffffff")
@@ -241,10 +257,10 @@ ax_textbox = fig.add_axes([0.02, 0.43, 0.17, 0.045])
 text_date = TextBox(ax_textbox, "", initial=state["Date"])
 text_date.on_submit(on_date_submit)
 
-ax_prev = fig.add_axes([0.02, 0.36, 0.085, 0.045])
-ax_next = fig.add_axes([0.115, 0.36, 0.085, 0.045])
-btn_prev = Button(ax_prev, "< -5 Days", color="#e2e8f0", hovercolor="#cbd5e1")
-btn_next = Button(ax_next, "+5 Days >", color="#e2e8f0", hovercolor="#cbd5e1")
+ax_prev = fig.add_axes([0.02, 0.36, 0.085, 0.05])
+ax_next = fig.add_axes([0.111, 0.36, 0.085, 0.05])
+btn_prev = Button(ax_prev, "-5 Trading Days", color="#e2e8f0", hovercolor="#cbd5e1")
+btn_next = Button(ax_next, "+5 Trading Days", color="#e2e8f0", hovercolor="#cbd5e1")
 btn_prev.on_clicked(lambda _: step_days(-5))
 btn_next.on_clicked(lambda _: step_days(5))
 

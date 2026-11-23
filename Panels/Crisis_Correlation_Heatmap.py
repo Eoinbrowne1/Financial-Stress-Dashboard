@@ -22,8 +22,9 @@ corr_2008 = crisis_correlation("2007-10-01", "2009-03-31")
 corr_covid = crisis_correlation("2020-02-01", "2020-04-30")
 corr_2022 = crisis_correlation("2021-12-01", "2022-10-31")
 
-def plot_heatmap(correlation_matrix, title):
-    fig, ax = plt.subplots(figsize=(11,8))
+def plot_heatmap(correlation_matrix, title, average_abs_corr, normal_average_abs_corr, correlation_change, best_diversifier, best_diversifier_corr):
+    fig, ax = plt.subplots(figsize=(13,8))
+    ax.grid(False)
     mask = np.tril(
         np.ones(correlation_matrix.shape, dtype=bool)
     )
@@ -37,10 +38,51 @@ def plot_heatmap(correlation_matrix, title):
         ax=ax ,
         mask=mask,
         fmt=".2f",
-        annot_kws={"size": 9}
+        annot_kws={"size": 9},
+        cbar_kws={"label": "Correlation", "shrink": 0.85, "pad": 0.02}
+        )
+    equities_key = (
+        "EQUITIES\n"
+        "SPY: S&P 500\n"
+        "QQQ: Nasdaq 100\n"
+        "IWM: Russell 2000\n"
+        "EFA: MSCI EAFE\n"
+        "EEM: MSCI Emerging Markets\n"
     )
-               
-    ax.set_title(title)
+    bonds_key = (
+        "BONDS\n"
+        "TLT: 20+ Year Treasury Bond\n"
+        "IEF: 7-10 Year Treasury Bond\n"
+        "LQD: Investment Grade Corporate Bond\n"
+        "HYG: High Yield Corporate Bond\n"
+    )
+    alternatives_key = (
+        "ALTERNATIVES\n"
+        "GLD: Gold\n"
+        "USO: Crude Oil\n"
+        "VNQ: Real Estate\n")
+    fig.text(0.83, 0.88, "ASSET GUIDE", fontsize=12, fontweight="bold",va="top")
+    fig.text(0.83, 0.78, equities_key, fontsize=9, va="top", linespacing= 1.5, bbox=dict(boxstyle="round, pad=0.5", facecolor="#f2f2f2", edgecolor="#cccccc"))
+    fig.text(0.83, 0.58, bonds_key, fontsize=9, va="top", linespacing= 1.5, bbox=dict(boxstyle="round, pad=0.5", facecolor="#f2f2f2", edgecolor="#cccccc"))
+    fig.text(0.83, 0.38, alternatives_key, fontsize=9, va="top", linespacing= 1.5, bbox=dict(boxstyle="round, pad=0.5", facecolor="#f2f2f2", edgecolor="#cccccc"))
+    fig.subplots_adjust(right=0.80)      
+    ax.set_title(f"{title} - Cross Asset Correlations", loc= "left", fontweight = "bold", fontsize=14, pad=12)
+    if correlation_change > 0:
+        impact_interpration = "Cross-asset relationships strengthened"
+    elif correlation_change < 0:
+        impact_interpration = "Cross-asset relationships weakened"
+    else: 
+        impact_interpration = "No major change in cross-asset relationships"      
+    impact_text = (
+        "CRISIS IMPACT\n"
+        f"Crisis avg |corr|: {average_abs_corr:.2f}\n"
+        f"Normal avg |corr|: {normal_average_abs_corr:.2f}\n"
+        f"Change: {correlation_change:+.2f}\n"
+        f"Impact: {impact_interpration}\n"
+        f"Best diversifier: {best_diversifier} ({best_diversifier_corr:.2f})"
+    )
+    fig.text(0.83, 0.2, impact_text, fontsize=10, fontweight="bold", va="top", bbox=dict(boxstyle="round, pad=0.6", facecolor="#f2f2f2", edgecolor="#cccccc"))
+
     return fig     
 
 def correlation_summary(correlation_matrix):
@@ -63,6 +105,16 @@ crises = {
     "2022 Market Stress": ("2021-12-01", "2022-10-31")
 }
 
+def diversification_ranking(correlation_matrix):
+    equities = ["SPY", "QQQ", "IWM", "EFA", "EEM"]
+    diversifiers = ["TLT", "IEF", "LQD", "HYG", "GLD", "USO", "VNQ"]
+    scores= {}
+    for asset in diversifiers:
+        scores[asset] = correlation_matrix.loc[equities, asset].mean()
+    ranking = pd.Series(scores).sort_values()
+    return ranking  
+
+
 def normal_market_correlation():
     normal_data = returns.copy()
 
@@ -80,12 +132,16 @@ def normal_market_correlation():
 def show_selected_crisis(selected_crisis):
     start_date, end_date = crises[selected_crisis]
     selected_corr = crisis_correlation(start_date, end_date)
+    observation_count = returns["Date"].between(start_date, end_date).sum()
+    ranking = diversification_ranking(selected_corr)
+    best_diversifier = ranking.index[0]
+    best_diversifier_corr = ranking.iloc[0]
     average_corr, average_abs_corr, strongest_pair, weakest_pair, strongest_value, weakest_value = correlation_summary(selected_corr)
     normal_corr = normal_market_correlation()
     normal_summary = correlation_summary(normal_corr)
     normal_average_abs_corr = normal_summary[1]
     correlation_change = average_abs_corr - normal_average_abs_corr
-    fig = plot_heatmap(selected_corr, selected_crisis)
+    fig = plot_heatmap(selected_corr, f"{selected_crisis} - {observation_count} trading days", average_abs_corr, normal_average_abs_corr, correlation_change, best_diversifier, best_diversifier_corr)
     return (
         fig,
         average_corr,

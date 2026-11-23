@@ -53,6 +53,7 @@ CRISIS_SHORT = {
     "2008 Financial Crisis": "2008",
     "COVID-19 Crash": "COVID",
     "2022 Market Stress": "2022",
+    "Custom period": "Custom",          #For the user's own dates
 }
 
 #House style for every chart

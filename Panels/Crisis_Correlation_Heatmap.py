@@ -3,10 +3,10 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-data = pd.read_csv("Data/market_data.csv")
+data = pd.read_csv("Data/market_data_expanded.csv")
 data["Date"] = pd.to_datetime(data["Date"])
-
-returns = np.log(data[["GLD" , "SPY", "TLT", "USO"]] / data[["GLD" , "SPY", "TLT", "USO"]].shift(1))
+TICKERS = [ "SPY", "QQQ", "IWM", "EFA", "EEM","TLT", "IEF", "LQD", "HYG","GLD", "USO", "VNQ"]
+returns = np.log(data[TICKERS] / data[TICKERS].shift(1))
 returns = returns.dropna()
 returns["Date"] = data.loc[returns.index, "Date"]
 
@@ -15,7 +15,7 @@ def crisis_correlation(start_date, end_date):
         (returns["Date"] >= start_date) &
         (returns["Date"] <= end_date)
     ]
-    correlation_matrix = crisis_data[["GLD" , "SPY", "TLT", "USO"]].corr()
+    correlation_matrix = crisis_data[TICKERS].corr()
     return correlation_matrix
 
 corr_2008 = crisis_correlation("2007-10-01", "2009-03-31")
@@ -23,7 +23,7 @@ corr_covid = crisis_correlation("2020-02-01", "2020-04-30")
 corr_2022 = crisis_correlation("2021-12-01", "2022-10-31")
 
 def plot_heatmap(correlation_matrix, title):
-    fig, ax = plt.subplots(figsize=(7,6))
+    fig, ax = plt.subplots(figsize=(11,8))
     mask = np.tril(
         np.ones(correlation_matrix.shape, dtype=bool)
     )
@@ -35,7 +35,9 @@ def plot_heatmap(correlation_matrix, title):
         vmax=1 ,
         center=0 ,
         ax=ax ,
-        mask=mask
+        mask=mask,
+        fmt=".2f",
+        annot_kws={"size": 9}
     )
                
     ax.set_title(title)
@@ -71,7 +73,7 @@ def normal_market_correlation():
                 (normal_data["Date"] <= end_date)
             )
         ]
-    normal_corr = normal_data[["GLD" , "SPY", "TLT", "USO"]].corr()   
+    normal_corr = normal_data[TICKERS].corr()   
     return normal_corr
   
  

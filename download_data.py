@@ -1,7 +1,20 @@
 import yfinance as yf
 import pandas as pd
 
-tickers = ["SPY", "GLD", "TLT", "USO"]
+tickers = [
+    "SPY",
+    "QQQ",
+    "IWM",
+    "EFA",
+    "EEM",
+    "TLT",
+    "IEF",
+    "LQD",
+    "HYG",
+    "GLD",
+    "USO",
+    "VNQ"
+]
 
 series_list = []
 
@@ -27,7 +40,7 @@ prices = pd.concat(series_list, axis=1)
 
 prices.index.name = "Date"
 
-prices.to_csv("Data/market_data.csv")
+prices.to_csv("Data/market_data_expanded.csv")
 
 print(prices.head())
 print()

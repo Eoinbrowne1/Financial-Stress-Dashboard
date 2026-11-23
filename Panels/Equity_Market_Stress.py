@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.dates as mdates
 from matplotlib.widgets import Button, RadioButtons, TextBox
+from pathlib import Path
 
 #List of tickers and their full name
 tickers = {"^VIX":"CBOE Volatility Index", "^GSPC":"S&P 500 Index", "XLF":"Financial Sector ETF",
@@ -18,6 +19,10 @@ crisis_periods = {"2008 Financial Crisis":("2007-10-1", "2009-03-31"),
 default_dates = {"2008 Financial Crisis":"2008-07-02",
                  "COVID-19 Crash":"2020-03-03",
                  "2022 Market Stress":"2022-05-09"}
+
+dd_axis_limits = {"2008 Financial Crisis": -90,
+                  "COVID-19 Crash": -50,
+                  "2022 Market Stress": -45}
 
 #prepping data for use in date calling functions
 vixdata = pd.read_csv("vix.csv", index_col= 0, parse_dates= True, skiprows=[1,2])
@@ -120,9 +125,10 @@ state = {"Crisis":"2008 Financial Crisis",
 plt.rcParams["font.sans-serif"] = "Segoe UI"
 fig = plt.figure(figsize = (14, 8.5), facecolor= "#f8fafc")
 fig.canvas.manager.set_window_title("Financial Stress Dashboard")
-gs = fig.add_gridspec(2, 1, left=0.25, right=0.96, top=0.77, bottom=0.09, hspace=0.16)
-ax_sp = fig.add_subplot(gs[0])
-ax_vix = fig.add_subplot(gs[1], sharex=ax_sp)
+gs = fig.add_gridspec(2, 2, width_ratios=[3,1], left=0.25, right=0.96, top=0.77, bottom=0.09, hspace=0.35, wspace=0.28)
+ax_sp = fig.add_subplot(gs[0,0])
+ax_vix = fig.add_subplot(gs[1,0], sharex=ax_sp)
+ax_dd = fig.add_subplot(gs[:, 1])
 
 kpi_text = fig.text(0.1, 0.81, "", fontsize=10, family="Consolas", va="bottom", ha="left",
                     bbox=dict(boxstyle = "round,pad=0.65", facecolor = "#ffffff", edgecolor = "#cbd5e1", linewidth = 1.2,),)
@@ -132,7 +138,8 @@ status_text = fig.text(0.03, 0.28, "", fontsize=9, color="#475569", wrap=True)
 def update(target_date: str, crisis: str):
        try:
             metrics = (drawdownsp(target_date, crisis), drawdownnd(target_date, crisis), drawdownrus(target_date, crisis),
-                         vixfear(target_date, crisis), realizedvol(target_date, crisis), finperformance(target_date, crisis))
+                         vixfear(target_date, crisis), realizedvol(target_date, crisis), finperformance(target_date, crisis),
+                         drawdown(target_date, crisis, fsetfdata))
             t_date = spdata.index.asof(pd.Timestamp(target_date))
             state["Date"] = t_date.strftime("%Y-%m-%d")
             state["Syncing"] = True
@@ -147,7 +154,7 @@ def update(target_date: str, crisis: str):
                     status_text.set_text(f"Showing trading session:\n{state['Date']}")
                     status_text.set_color("#15803d")
             #calculate required metrics 
-                    sp_dd, nd_dd, rus_dd, vix_regime, vix_spread, fin_perf = metrics
+                    sp_dd, nd_dd, rus_dd, vix_regime, vix_spread, fin_perf, xlf_dd = metrics
             sp_close = round(float(spdata.loc[t_date, "Close"]), 2)
             vix_date = vixdata.index.asof(t_date)
             vix_level = round(float(vixdata.loc[vix_date, "Close"]), 2)
@@ -191,7 +198,7 @@ def update(target_date: str, crisis: str):
             ax_sp.set_ylabel("S&P 500 Index", fontweight="bold", color="#1e293b")
             ax_sp.grid(True, linestyle=":", alpha=0.5)
             ax_sp.legend(loc="upper right", fontsize=8.5, framealpha=0.9)       
-            plt.setp(ax_sp.get_xticklabels(), visible=False)
+            plt.setp(ax_sp.get_xticklabels(), rotation=25, ha="right")
              #set up vix plot 
             ax_vix.clear()
             ax_vix.plot(vix_win.index, vix_win.values, color="#d97706", linewidth=1.8, label="CBOE VIX")
@@ -210,8 +217,30 @@ def update(target_date: str, crisis: str):
             ax_vix.grid(True, linestyle=":", alpha=0.5)
             ax_vix.legend(loc="upper right", fontsize=8.5, framealpha=0.9)
             ax_vix.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d"))
-            fig.autofmt_xdate(rotation=25)
-                   
+            plt.setp(ax_vix.get_xticklabels(), rotation=25, ha="right")
+
+            #bar chart comparing drawdowns across markets
+            dd_values = {"S&P 500": sp_dd, "Nasdaq 100": nd_dd, "Russell 2000": rus_dd, "Financials (XLF)": xlf_dd}
+            names = list(dd_values.keys())
+            values = list(dd_values.values())
+            worst = min(values)
+            colours = ["#dc2626" if v == worst else "#94a3b8" for v in values]
+
+            ax_dd.clear()
+            ax_dd.barh(names, values, color=colours)
+            for name, value in dd_values.items():
+                if value <= -20:      # long bar: white label inside the bar
+                    ax_dd.text(value, name, f" {value:.1f}%", va="center", ha="left",
+                    fontsize=8.5, fontweight="bold", color="#ffffff")
+                else:                 # short bar: dark label just outside the bar
+                    ax_dd.text(value, name, f"{value:.1f}% ", va="center", ha="right",
+                    fontsize=8.5, fontweight="bold", color="#1e293b")
+            ax_dd.axvline(0, color="#1e293b", linewidth=0.8)
+            ax_dd.set_xlim(dd_axis_limits[crisis], 0)
+            ax_dd.invert_yaxis()                     # S&P 500 at the top
+            ax_dd.set_title("Drawdown from Crisis Peak (%)", fontsize=10,
+                fontweight="bold", color="#1e293b")
+            ax_dd.grid(True, axis="x", linestyle=":", alpha=0.5)
             fig.canvas.draw()       
 
        except Exception as exc:

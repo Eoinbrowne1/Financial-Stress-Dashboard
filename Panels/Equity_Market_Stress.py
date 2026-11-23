@@ -25,7 +25,16 @@ spdata = pd.read_csv("sp.csv", index_col= 0, parse_dates= True, skiprows=[1,2])
 fsetfdata = pd.read_csv("fsetf.csv", index_col= 0, parse_dates= True, skiprows=[1,2])
 nasddata = pd.read_csv("nasd.csv", index_col= 0, parse_dates= True, skiprows=[1,2])
 russdata = pd.read_csv("russ.csv", index_col= 0, parse_dates= True, skiprows=[1,2])
+#make sure there are no duplicate timestamp rows
+vixdata = vixdata[~vixdata.index.duplicated(keep="last")].sort_index()
+spdata = spdata[~spdata.index.duplicated(keep="last")].sort_index()
+fsetfdata = fsetfdata[~fsetfdata.index.duplicated(keep="last")].sort_index()
+nasddata = nasddata[~nasddata.index.duplicated(keep="last")].sort_index()
+russdata = russdata[~russdata.index.duplicated(keep="last")].sort_index()
 
+
+
+    
 #function for calculating drawdowns, x is date y is crisis z is data
 def drawdown(x, y, z):
        if y in crisis_periods:
@@ -121,7 +130,7 @@ status_text = fig.text(0.03, 0.28, "", fontsize=9, color="#475569", wrap=True)
 #function for updating dashboard
 def update(target_date: str, crisis: str):
        try:
-              metrics = (drawdownsp(target_date, crisis), drawdownnd(target_date, crisis), drawdownrus(target_date, crisis),
+            metrics = (drawdownsp(target_date, crisis), drawdownnd(target_date, crisis), drawdownrus(target_date, crisis),
                          vixfear(target_date, crisis), realizedvol(target_date, crisis), finperformance(target_date, crisis))
        except Exception as exc:
              status_text.set_text(f"Input error:\n{exc}")
@@ -131,6 +140,7 @@ def update(target_date: str, crisis: str):
        
        t_date = spdata.index.asof(pd.Timestamp(target_date))
        state["Date"] = t_date.strftime("%Y-%m-%d")
+
 #message if date had to be snapped to valid trading day 
        if pd.Timestamp(target_date) != t_date:
         status_text.set_text(f"Snapped {target_date} to valid\ntrading day: {state['Date']}")
@@ -150,11 +160,11 @@ def update(target_date: str, crisis: str):
 #set the kpi metrics to update 
        kpi_lines = (
         f"REGIME: {crisis.upper()}   |   TRADING DATE: {state['Date']}\n"
-        f"S&P 500: {sp_close:,.2f}  (Drawdown: -{sp_dd:.2f}%)   |   "
+        f"S&P 500: {sp_close:,.2f}  (Drawdown: {sp_dd:.2f}%)   |   "
         f"XLF/SPX Rel. Perf: {fin_perf:+.2f}%\n"
         f"VIX Fear: {vix_level:.2f} [{vix_regime}]   |   "
         f"21D Realized Vol: {vol_21d:.2f}% (Spread: {vix_spread:+.2f})   |   "
-        f"NDX DD: -{nd_dd:.2f}%  |  RUT DD: -{rus_dd:.2f}%")
+        f"NDX DD: {nd_dd:.2f}%  |  RUT DD: {rus_dd:.2f}%")
         
        kpi_text.set_text(kpi_lines)
 #setting the window to be displayed on the graphs 
@@ -203,25 +213,22 @@ def update(target_date: str, crisis: str):
        ax_vix.legend(loc="upper right", fontsize=8.5, framealpha=0.9)
        ax_vix.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d"))
        fig.autofmt_xdate(rotation=25)
-#get figures to render only once
-       fig.canvas.draw_idle()        
+       
+       fig.canvas.draw()       
 
 # function for interactive controls to update plotting function
 def on_crisis_change(label: str):
     state["Crisis"] = label
-    default_dt = default_dates[label]
-    text_date.set_val(default_dt)
-    update(default_dt, label)
+    update(default_dates[label], label)
 #functions for changing date
 def on_date_submit(text: str):
-    update(text.strip(), state["Crisis"])
-
+    cleaned = text.strip()
+    if cleaned:
+          update(cleaned, state["Crisis"])
 
 def step_days(delta_days: int):
     new_dt = (pd.Timestamp(state["Date"]) + pd.Timedelta(days=delta_days)).strftime("%Y-%m-%d")
-    text_date.set_val(new_dt)
     update(new_dt, state["Crisis"])
-
 
 #button to select crisis period
 fig.text(0.02, 0.75, "1. Select Crisis Regime", fontweight="bold", fontsize=10.5, color="#1e293b")

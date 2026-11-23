@@ -43,7 +43,8 @@ with tab2:
 
     if chart_type == "Overall severity (bubbles)" or measure == "Peak yearly volatility (%)":
         window = st.slider("Volatility window (trading days)",
-                           min_value=5, max_value=63, value=21,
+                           min_value=5, max_value=63, 
+value=21,
                            help="21 days is about 1 month. Shorter windows catch sharper spikes.")
     else:
         window = 21  

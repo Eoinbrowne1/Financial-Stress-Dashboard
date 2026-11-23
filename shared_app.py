@@ -82,12 +82,16 @@ with tab2:
                    "over time, so it can make oil's recovery look slower than the oil price itself.")
 
 
-        st.write("**Financial Stress Index peak** (St. Louis Fed, 0 = normal)")
+        st.write("**Financial Stress Index peak**: the highest weekly stress reading in each period "
+                 "(St. Louis Fed). 0 = normal, above 0 = more stress than normal.")
         cols = st.columns(len(chosen_crises))              # one column per crisis
         for i, name in enumerate(chosen_crises):
             crisis_rows = table[table["Crisis"] == name]   # this crisis's rows
             peak = crisis_rows["Stress index peak"].iloc[0]
             cols[i].metric(name, peak)
+        
+        st.caption("2008 was by far the most stressful for the financial system as a whole. "
+                   "2022 barely rose above normal, even though bonds fell sharply.")
 
 with tab3:
     st.header("Crisis Correlation")

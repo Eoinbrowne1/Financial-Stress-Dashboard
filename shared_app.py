@@ -89,9 +89,6 @@ with tab2:
             crisis_rows = table[table["Crisis"] == name]   # this crisis's rows
             peak = crisis_rows["Stress index peak"].iloc[0]
             cols[i].metric(name, peak)
-        
-        st.caption("2008 was by far the most stressful for the financial system as a whole. "
-                   "2022 barely rose above normal, even though bonds fell sharply.")
 
 with tab3:
     st.header("Crisis Correlation")

@@ -1,6 +1,4 @@
 import yfinance as yf
-import seaborn as sns
-import fredapi as fpi
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -116,7 +114,7 @@ gs = fig.add_gridspec(2, 1, left=0.25, right=0.96, top=0.77, bottom=0.09, hspace
 ax_sp = fig.add_subplot(gs[0])
 ax_vix = fig.add_subplot(gs[1], sharex=ax_sp)
 
-kpi_text = fig.text(0.25, 0.81, "", fontsize=10, family="Consolas", va="bottom", ha="left",
+kpi_text = fig.text(0.1, 0.81, "", fontsize=10, family="Consolas", va="bottom", ha="left",
                     bbox=dict(boxstyle = "round,pad=0.65", facecolor = "#ffffff", edgecolor = "#cbd5e1", linewidth = 1.2,),)
 status_text = fig.text(0.03, 0.28, "", fontsize=9, color="#475569", wrap=True)
 
@@ -140,7 +138,7 @@ def update(target_date: str, crisis: str):
        else:
         status_text.set_text(f"Showing trading session:\n{state['Date']}")
         status_text.set_color("#15803d")
-#calculate regquired metrics 
+#calculate required metrics 
         sp_dd, nd_dd, rus_dd, vix_regime, vix_spread, fin_perf = metrics
        sp_close = round(float(spdata.loc[t_date, "Close"]), 2)
        vix_date = vixdata.index.asof(t_date)
@@ -226,18 +224,18 @@ def step_days(delta_days: int):
 
 
 #button to select crisis period
-fig.text(0.03, 0.75, "1. Select Crisis Regime", fontweight="bold", fontsize=10.5, color="#1e293b")
-ax_radio = fig.add_axes([0.03, 0.56, 0.18, 0.17], facecolor="#ffffff")
+fig.text(0.02, 0.75, "1. Select Crisis Regime", fontweight="bold", fontsize=10.5, color="#1e293b")
+ax_radio = fig.add_axes([0.02, 0.56, 0.17, 0.17], facecolor="#ffffff")
 radio_crisis = RadioButtons(ax_radio, list(crisis_periods.keys()), active=0)
 radio_crisis.on_clicked(on_crisis_change)    
 #button for selecting date
-fig.text(0.03, 0.49, "2. Inspect Date (YYYY-MM-DD)", fontweight="bold", fontsize=10.5, color="#1e293b")
-ax_textbox = fig.add_axes([0.03, 0.43, 0.18, 0.045])
+fig.text(0.02, 0.49, "2. Inspect Date (YYYY-MM-DD)", fontweight="bold", fontsize=10.5, color="#1e293b")
+ax_textbox = fig.add_axes([0.02, 0.43, 0.17, 0.045])
 text_date = TextBox(ax_textbox, "", initial=state["Date"])
 text_date.on_submit(on_date_submit)
 
-ax_prev = fig.add_axes([0.03, 0.36, 0.085, 0.045])
-ax_next = fig.add_axes([0.125, 0.36, 0.085, 0.045])
+ax_prev = fig.add_axes([0.02, 0.36, 0.085, 0.045])
+ax_next = fig.add_axes([0.115, 0.36, 0.085, 0.045])
 btn_prev = Button(ax_prev, "< -5 Days", color="#e2e8f0", hovercolor="#cbd5e1")
 btn_next = Button(ax_next, "+5 Days >", color="#e2e8f0", hovercolor="#cbd5e1")
 btn_prev.on_clicked(lambda _: step_days(-5))

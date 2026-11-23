@@ -19,11 +19,33 @@ crisis_periods = {"2008 Financial Crisis":("2007-10-1", "2009-03-31"),
 default_dates = {"2008 Financial Crisis":"2008-07-02",
                  "COVID-19 Crash":"2020-03-03",
                  "2022 Market Stress":"2022-05-09"}
-
+#axis limits for drawdown bar chart
 dd_axis_limits = {"2008 Financial Crisis": -90,
                   "COVID-19 Crash": -50,
                   "2022 Market Stress": -45}
-
+# Key events for each crisis
+crisis_events = {
+    "2008 Financial Crisis": {"2007-10-09": "S&P pre-crisis peak",
+                              "2008-03-16": "Bear Stearns rescued",
+                              "2008-09-15": "Lehman collapses",
+                              "2008-09-29": "Congress rejects TARP",
+                              "2008-10-03": "TARP signed",
+                              "2008-11-25": "Fed launches QE1",
+                              "2009-03-09": "Market bottom"},
+    "COVID-19 Crash": {"2020-02-19": "S&P pre-COVID peak",
+                       "2020-03-03": "Fed emergency cut",
+                       "2020-03-09": "1st circuit breaker",
+                       "2020-03-11": "WHO declares pandemic",
+                       "2020-03-16": "Fed cuts to zero",
+                       "2020-03-23": "Market bottom / unlimited QE",
+                       "2020-03-27": "CARES Act signed"},
+    "2022 Market Stress": {"2022-01-03": "S&P record high",
+                           "2022-02-24": "Russia invades Ukraine",
+                           "2022-03-16": "Fed's first hike",
+                           "2022-06-15": "Fed hikes 75bp",
+                           "2022-08-26": "Powell Jackson Hole",
+                           "2022-09-13": "Hot CPI print",
+                           "2022-10-12": "Market bottom"},}
 #prepping data for use in date calling functions
 vixdata = pd.read_csv("vix.csv", index_col= 0, parse_dates= True, skiprows=[1,2])
 spdata = pd.read_csv("sp.csv", index_col= 0, parse_dates= True, skiprows=[1,2])
@@ -36,10 +58,7 @@ spdata = spdata[~spdata.index.duplicated(keep="last")].sort_index()
 fsetfdata = fsetfdata[~fsetfdata.index.duplicated(keep="last")].sort_index()
 nasddata = nasddata[~nasddata.index.duplicated(keep="last")].sort_index()
 russdata = russdata[~russdata.index.duplicated(keep="last")].sort_index()
-
-
-
-    
+  
 #function for calculating drawdowns, x is date y is crisis z is data
 def drawdown(x, y, z):
        if y in crisis_periods:
@@ -225,6 +244,17 @@ def update(target_date: str, crisis: str):
             ax_vix.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d"))
             plt.setp(ax_vix.get_xticklabels(), rotation=25, ha="right")
 
+            # Event markers: only draw events that fall inside the visible window
+            for event_date, event_name in crisis_events[crisis].items():
+                e_date = spdata.loc[event_date:].index[0]   # first trading day on/after the event
+                if win_start <= e_date <= win_end:
+                    ax_sp.axvline(e_date, color="#7c3aed", linestyle=":", linewidth=1.2)
+                    ax_vix.axvline(e_date, color="#7c3aed", linestyle=":", linewidth=1.2)
+                    ax_sp.text(e_date, 0.04, f" {event_name}", transform=ax_sp.get_xaxis_transform(),
+                               rotation=90, ha="right", va="bottom", fontsize=8, color="#5b21b6",
+                               bbox=dict(boxstyle="round,pad=0.2", facecolor="#ffffff",
+                               edgecolor="none", alpha=0.8))
+
             #bar chart comparing drawdowns across markets
             dd_values = {"S&P 500": sp_dd, "Nasdaq 100": nd_dd, "Russell 2000": rus_dd, "Financials (XLF)": xlf_dd}
             names = list(dd_values.keys())
@@ -268,15 +298,10 @@ def on_date_submit(text: str):
           update(cleaned, state["Crisis"])
 
 def step_days(delta_days: int):
-    # Only the trading days inside the selected crisis window
     start, end = crisis_periods[state["Crisis"]]
     trading_days = list(spdata.loc[start:end].index)
-
-    # Position of the current date in that list
     current = spdata.index.asof(pd.Timestamp(state["Date"]))
     pos = trading_days.index(current)
-
-    # Move by N trading days, staying inside the crisis window
     new_pos = max(0, min(pos + delta_days, len(trading_days) - 1))
     new_dt = trading_days[new_pos].strftime("%Y-%m-%d")
 

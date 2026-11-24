@@ -136,3 +136,40 @@ def show_or_hide(chart_type, measure, add_custom):
             gr.update(visible=show_window),       # volatility slider
             gr.update(visible=add_custom),        # custom start box
             gr.update(visible=add_custom))        # custom end box
+
+def build_crisis_comparison_tab():
+    """Create the Crisis Comparison controls and chart. Call this inside a gr.Tab."""
+    gr.Markdown("## Crisis Comparison\nWhich financial crisis was most severe, "
+                "and how did the crises differ?")
+
+    # Draw the default view once so the tab isn't empty when it opens
+    first_cards, first_fig, first_text = update_panel(CHART_TYPES[0], list(CRISES.keys()), MEASURES[0],
+                                         21, False, "2018-10-01", "2018-12-31")
+
+    cards = gr.HTML(first_cards)                       # headline cards along the top
+
+    with gr.Row():
+        with gr.Column(scale=1):
+            chart_type = gr.Radio(CHART_TYPES, value=CHART_TYPES[0], label="Chart")
+            chosen = gr.CheckboxGroup(list(CRISES.keys()), value=list(CRISES.keys()),
+                                      label="Crises to include")
+            measure = gr.Dropdown(MEASURES, value=MEASURES[0], label="Measure")
+            window = gr.Slider(5, 63, value=21, step=1, visible=False,
+                               label="Volatility window (trading days)",
+                               info="21 days is about 1 month. Shorter windows catch sharper spikes.")
+            add_custom = gr.Checkbox(value=False, label="Add my own period to compare")
+            custom_start = gr.Textbox(value="2018-10-01", label="Start (YYYY-MM-DD)", visible=False)
+            custom_end = gr.Textbox(value="2018-12-31", label="End (YYYY-MM-DD)", visible=False)
+        with gr.Column(scale=3):
+            plot = gr.Plot(value=first_fig, label="Crisis comparison")
+            text = gr.Markdown(first_text)
+
+    # Redraw whenever any control changes
+    inputs = [chart_type, chosen, measure, window, add_custom, custom_start, custom_end]
+    for control in inputs:
+        control.change(update_panel, inputs=inputs, outputs=[cards, plot, text])
+
+    # Show or hide controls when the chart, measure or custom tick box changes
+    for control in [chart_type, measure, add_custom]:
+        control.change(show_or_hide, inputs=[chart_type, measure, add_custom],
+                       outputs=[measure, window, custom_start, custom_end])

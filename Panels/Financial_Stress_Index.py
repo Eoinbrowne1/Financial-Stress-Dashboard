@@ -9,6 +9,7 @@ A value of 0 means normal stress in financial markets. Values above 0 mean more 
 import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
+import gradio as gr
 
 # --- Settings ---
 
@@ -168,8 +169,43 @@ def plot_stress_index(
     return fig
 
 
+# --- Gradio controls ---
 
+def update_stress_panel(
+        start_year: int,
+        end_year: int,
+        crises: list,
+        sma_weeks: int,
+) -> tuple:
+    """Redraw the chart and summary when the control changes.
 
+    Args:
+        start_year (int): Firsy year to show.
+        end_year (int): Last year to show.
+        crises (list): Names of the crises to shade.
+        sma_weeks (int): Weeks in the moving average.
+
+    Returns:
+        tuple: The new chart (plt.Figure) and the summary text (str).
+    """
+    plt.close("all") # Free the memory used by old charts
+    stress = load_stress_index()
+    start = f"{int(start_year)}-01-01"
+    end = f"{int(end_year)}-12-31"
+    fig = plot_stress_index(stress, start, end, crises, int(sma_weeks))
+
+    visible = stress.loc[start:end]
+    if len(visible) == 0:
+        return fig, "No data in this date range."
+
+    summary = summarise_stress(visible)
+    text = (
+        f"**Latest reading:** {summary['latest']:.2f} | "
+        f"**Peak in this period:** {summary['peak']:.1f} "
+        f"({summary['peak_date']:%b %Y}) | "
+        f"**Weeks above normal:** {summary['percent_above']:.0f}%"
+    )
+    return fig, text
                 
 
 # --- Quick test (only runs when this file is run directly) ---

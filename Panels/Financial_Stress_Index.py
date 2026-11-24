@@ -27,3 +27,28 @@ CRISIS_COLOURS = {
     "COVID-19 Crash": "#8e44ad",
     "2022 Market Stress": "#d68910",
 }
+
+# --- Functions ---
+
+def load_stress_index(path: str = DATA_FILE) -> pd.Series:
+    """Load the weekly Financial Stress Index from a CSV file.
+
+    Args:
+        path (str): Location of the CSV file downloaded from FRED.
+
+    Returns:
+        pd.Series: Stress index values, with the dates as the index.
+    """
+    df = pd.read_csv(path)
+    df["observation_date"] = pd.to_datetime(df["observation_date"])
+    df = df.set_index("observation_date")
+    df = df.dropna()
+    return df["STLFSI4"]
+
+# --- Quick test (only runs when this file is run directly) ---
+
+if __name__ == "__main__":
+    stress = load_stress_index()
+    print(stress.head())
+    print(stress.tail())
+    

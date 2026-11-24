@@ -1,6 +1,6 @@
 # Financial Stress Dashboard
 
-An interactive Streamlit dashboard exploring how financial crises affect markets.
+An interactive Gradio dashboard exploring how financial crises affect markets.
 Four panels, one per team member, each answering a different question about the
 2008 Financial Crisis, the COVID-19 crash and the 2022 market stress.
 
@@ -9,7 +9,7 @@ Four panels, one per team member, each answering a different question about the
 1. Install the packages:
    pip install -r requirements.txt
 2. From the main folder, start the dashboard:
-   streamlit run shared_app.py
+   Gradio run shared_app_gr.py
 3. It opens in your browser at http://localhost:8501
 
 No API key is needed: the FRED data is saved in the `Data` folder.

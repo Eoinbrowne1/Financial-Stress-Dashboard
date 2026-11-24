@@ -8,6 +8,7 @@ A value of 0 means normal stress in financial markets. Values above 0 mean more 
 
 import pandas as pd
 import matplotlib.pyplot as plt
+from pathlib import Path
 
 # --- Settings ---
 
@@ -179,4 +180,6 @@ if __name__ == "__main__":
     print(stress.tail())
     print(summarise_stress(stress))
     fig = plot_stress_index(stress, "2006-01-01", "2026-12-31")
+    Path("figures").mkdir(exist_ok=True)
+    fig.savefig("figures/stress_index.png", dpi=200, bbox_inches="tight")
     plt.show()

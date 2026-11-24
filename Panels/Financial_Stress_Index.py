@@ -98,6 +98,29 @@ def summarise_stress(stress: pd.Series) -> dict:
         "percent_above": percent_above,
     }
 
+def plot_stress_index(stress: pd.Series, start: str, end: str) -> plt.Figure:
+    """Draw the financial Stress Index as a line chart.
+
+    Args:
+        stress (pd.Series): Weekly stress index values.
+        start (str): First date to show, e.g "2006-01-01".
+        end (str): Last date to show, e.g "2026-11-13".
+
+    Returns:
+        plt.Figure: The finished chart.
+    """
+    visible = stress.loc[start:end]
+    fig, ax = plt.subplots(figsize=(10,4.5))
+    ax.plot(visible.index, visible.values, color="#1f4e79", linewidth=1.5, label="Stress index")
+    ax.axhline(0, color="grey", linestyle="--", linewidth=1, label="Normal stress (0)")
+    ax.set_title("Financial stress hit its highest levels in 2008 and 2020", loc="left", fontweight="bold")
+    ax.set_ylabel("Stress index (0 = normal)")
+    ax.legend(frameon=False, fontsize=8, loc="upper right")
+    ax.spines[["top", "right"]].set_visible(False)
+    fig.autofmt_xdate()
+    return fig
+
+                
 
 # --- Quick test (only runs when this file is run directly) ---
 
@@ -106,3 +129,5 @@ if __name__ == "__main__":
     print(stress.head())
     print(stress.tail())
     print(summarise_stress(stress))
+    fig = plot_stress_index(stress, "2006-01-01", "2026-12-31")
+    plt.show()

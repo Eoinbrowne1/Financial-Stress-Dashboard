@@ -98,27 +98,76 @@ def summarise_stress(stress: pd.Series) -> dict:
         "percent_above": percent_above,
     }
 
-def plot_stress_index(stress: pd.Series, start: str, end: str) -> plt.Figure:
-    """Draw the financial Stress Index as a line chart.
+def plot_stress_index(
+    stress: pd.Series,
+    start: str,
+    end: str,
+    crises_to_show: list = None,
+    sma_weeks: int = 1,
+) -> plt.Figure:
+    """Draw the Financial Stress Index as a line chart.
 
     Args:
         stress (pd.Series): Weekly stress index values.
-        start (str): First date to show, e.g "2006-01-01".
-        end (str): Last date to show, e.g "2026-11-13".
+        start (str): First date to show, e.g. "2006-01-01".
+        end (str): Last date to show, e.g. "2026-11-13".
+        crises_to_show (list): Names of the crises to shade.
+            None means shade all of them.
+        sma_weeks (int): Weeks in the moving average. 1 means raw data.
 
     Returns:
         plt.Figure: The finished chart.
     """
-    visible = stress.loc[start:end]
-    fig, ax = plt.subplots(figsize=(10,4.5))
+    # Avoid the mutable default argument trap
+    if crises_to_show is None:
+        crises_to_show = list(CRISES.keys())
+
+    smoothed = smooth_stress_index(stress, sma_weeks)
+    visible = smoothed.loc[start:end]
+
+    fig, ax = plt.subplots(figsize=(10, 4.5))
+
+    # Stop here if the chosen dates contain no data
+    if len(visible) == 0:
+        ax.set_title("No data in this date range", loc="left")
+        return fig
+
     ax.plot(visible.index, visible.values, color="#1f4e79", linewidth=1.5, label="Stress index")
     ax.axhline(0, color="grey", linestyle="--", linewidth=1, label="Normal stress (0)")
-    ax.set_title("Financial stress hit its highest levels in 2008 and 2020", loc="left", fontweight="bold")
+
+    for name, (crisis_start, crisis_end) in CRISES.items():
+        if name in crises_to_show:
+            ax.axvspan(pd.to_datetime(crisis_start), pd.to_datetime(crisis_end), color=CRISIS_COLOURS[name], alpha=0.15, label=name)
+
+            # Label the highest point inside the crisis, if it is on screen
+            crisis = visible.loc[crisis_start:crisis_end]
+            if len(crisis) > 0:
+                peak = crisis.max()
+                peak_date = crisis[crisis == peak].index[0]
+                ax.annotate(f"Peak {peak:.1f}\n{peak_date:%b %Y}",
+                            xy=(peak_date, peak),
+                            xytext=(15, -5),
+                            textcoords="offset points",
+                            fontsize=8,
+                            arrowprops=dict(arrowstyle="-"))
+
+    # Keep the x-axis to the dates the user chose
+    ax.set_xlim(visible.index[0], visible.index[-1])
+
+    # A title that tells the story of whatever period is on screen
+    summary = summarise_stress(visible)
+    ax.set_title(f"Stress peaked at {summary['peak']:.1f} in "
+                 f"{summary['peak_date']:%B %Y}; "
+                 f"{summary['percent_above']:.0f}% of weeks were above normal",
+                 loc="left", fontweight="bold")
     ax.set_ylabel("Stress index (0 = normal)")
     ax.legend(frameon=False, fontsize=8, loc="upper right")
     ax.spines[["top", "right"]].set_visible(False)
     fig.autofmt_xdate()
     return fig
+
+
+
 
                 
 

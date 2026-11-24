@@ -47,3 +47,17 @@ def check_custom_dates(start_text, end_text):
                             f"and {LAST_DAY.date()}.")
     return str(start.date()), str(end.date()), ""
 
+def stress_summary(table, chosen_crises):
+    """The stress index peak for each chosen period, as a short Markdown table."""
+    if STRESS is None:
+        return "Stress index not available (no saved copy and no FRED key)."
+    lines = ["**Financial Stress Index peak**: the highest weekly stress reading in each period "
+             "(St. Louis Fed). 0 = normal, above 0 = more stress than normal.",
+             "",
+             "| Period | Stress index peak |",
+             "|---|---|"]
+    for name in chosen_crises:
+        crisis_rows = table[table["Crisis"] == name]           # this period's rows
+        peak = crisis_rows["Stress index peak"].iloc[0]
+        lines.append(f"| {name} | {peak:.2f} |")
+    return "\n".join(lines)

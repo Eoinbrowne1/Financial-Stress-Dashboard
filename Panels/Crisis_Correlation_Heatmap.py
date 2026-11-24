@@ -4,14 +4,19 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import gradio as gr
 
+# Load and prepare market data
 data = pd.read_csv("Data/market_data_expanded.csv")
 data["Date"] = pd.to_datetime(data["Date"])
 TICKERS = [ "SPY", "QQQ", "IWM", "EFA", "EEM","TLT", "IEF", "LQD", "HYG","GLD", "USO", "VNQ"]
+EQUITY_TICKERS = ["SPY", "QQQ", "IWM", "EFA", "EEM"]
+DIVERSIFIER_TICKERS = ["TLT", "IEF", "LQD", "HYG", "GLD", "USO", "VNQ"]
 returns = np.log(data[TICKERS] / data[TICKERS].shift(1))
 returns = returns.dropna()
 returns["Date"] = data.loc[returns.index, "Date"]
 
+# Core correlation analysis
 def crisis_correlation(start_date, end_date):
+    """Calculate the correlation matrix for asset returns within a selected crisis period."""
     crisis_data = returns[
         (returns["Date"] >= start_date) &
         (returns["Date"] <= end_date)
@@ -19,11 +24,9 @@ def crisis_correlation(start_date, end_date):
     correlation_matrix = crisis_data[TICKERS].corr()
     return correlation_matrix
 
-corr_2008 = crisis_correlation("2007-10-01", "2009-03-31")
-corr_covid = crisis_correlation("2020-02-01", "2020-04-30")
-corr_2022 = crisis_correlation("2021-12-01", "2022-10-31")
-
+# Plotting functions
 def plot_heatmap(correlation_matrix, title, average_abs_corr, normal_average_abs_corr, correlation_change, best_diversifier, best_diversifier_corr):
+    """Create the main crisis correlation heatmap and supporting annotations."""
     fig, ax = plt.subplots(figsize=(13,8))
     ax.grid(False)
     mask = np.tril(
@@ -69,24 +72,26 @@ def plot_heatmap(correlation_matrix, title, average_abs_corr, normal_average_abs
     fig.subplots_adjust(right=0.80)      
     ax.set_title(f"{title} - Cross Asset Correlations", loc= "left", fontweight = "bold", fontsize=14, pad=12)
     if correlation_change > 0:
-        impact_interpration = "Cross-asset relationships strengthened"
+        impact_interpretation = "Cross-asset relationships strengthened"
     elif correlation_change < 0:
-        impact_interpration = "Cross-asset relationships weakened"
+        impact_interpretation = "Cross-asset relationships weakened"
     else: 
-        impact_interpration = "No major change in cross-asset relationships"      
+        impact_interpretation = "No major change in cross-asset relationships"      
     impact_text = (
         "CRISIS IMPACT\n"
         f"Crisis avg |corr|: {average_abs_corr:.2f}\n"
         f"Normal avg |corr|: {normal_average_abs_corr:.2f}\n"
         f"Change: {correlation_change:+.2f}\n"
-        f"Impact: {impact_interpration}\n"
+        f"Impact: {impact_interpretation}\n"
         f"Best diversifier: {best_diversifier} ({best_diversifier_corr:.2f})"
     )
     fig.text(0.83, 0.2, impact_text, fontsize=10, fontweight="bold", va="top", bbox=dict(boxstyle="round, pad=0.6", facecolor="#f2f2f2", edgecolor="#cccccc"))
 
     return fig     
 
+# Correlation summary statistics
 def correlation_summary(correlation_matrix):
+    """Summarise pairwise correlations using average, absolute average, and extreme values."""
     mask = np.triu(np.ones(correlation_matrix.shape), k=1).astype(bool)
 
     pairs = correlation_matrix.where(mask).stack()
@@ -100,23 +105,26 @@ def correlation_summary(correlation_matrix):
 
     return average_corr, average_abs_corr, strongest_pair, weakest_pair, strongest_value, weakest_value
 
+# Crisis periods used throughout the dashboard
 crises = {
     "2008 Financial Crisis": ("2007-10-01", "2009-03-31"),
     "COVID-19 Crash": ("2020-02-01", "2020-04-30"),
     "2022 Market Stress": ("2021-12-01", "2022-10-31")
 }
 
+# Diversification and normal-market benchmark analysis
 def diversification_ranking(correlation_matrix):
-    equities = ["SPY", "QQQ", "IWM", "EFA", "EEM"]
-    diversifiers = ["TLT", "IEF", "LQD", "HYG", "GLD", "USO", "VNQ"]
-    scores= {}
+    """Rank non-equity assets by their average correlation with the selected equity group."""
+    equities = EQUITY_TICKERS
+    diversifiers = DIVERSIFIER_TICKERS
+    scores = {}
     for asset in diversifiers:
         scores[asset] = correlation_matrix.loc[equities, asset].mean()
     ranking = pd.Series(scores).sort_values()
     return ranking  
 
-
 def normal_market_correlation():
+    """Calculate the baseline correlation matrix after excluding the defined crisis periods."""
     normal_data = returns.copy()
 
     for start_date, end_date in crises.values():
@@ -128,14 +136,17 @@ def normal_market_correlation():
         ]
     normal_corr = normal_data[TICKERS].corr()   
     return normal_corr
-  
+
+# Correlation change analysis
 def correlation_change_matrix(crisis_matrix):
+    """Compare crisis correlations with the normal-market baseline."""
     normal_matrix = normal_market_correlation()
     change_matrix = crisis_matrix - normal_matrix
     return change_matrix
 
 def plot_change_heatmap(change_matrix, title):
-    fig, ax = plt.subplots(figsize=(13,8))
+    """Create a heatmap showing correlation changes relative to normal-market conditions."""
+    fig, ax = plt.subplots(figsize=(13, 8))
     mask = np.tril(
         np.ones(change_matrix.shape, dtype=bool)
     )
@@ -162,16 +173,8 @@ def plot_change_heatmap(change_matrix, title):
     )
     return fig
 
-def choose_analysis_view(selected_crisis, analysis_view):
-    if analysis_view == "Crisis Correlation":
-        return show_selected_crisis(selected_crisis)[0]
-    start_date, end_date = crises[selected_crisis]
-    crisis_matrix = crisis_correlation(start_date,end_date)
-    change_matrix = correlation_change_matrix(crisis_matrix)
-    observation_count = returns["Date"].between(start_date, end_date).sum()
-    return plot_change_heatmap(change_matrix, f"{selected_crisis} - {observation_count} trading days")
-
 def show_selected_crisis(selected_crisis):
+    """Run the selected crisis analysis and return the figure and summary statistics."""
     start_date, end_date = crises[selected_crisis]
     selected_corr = crisis_correlation(start_date, end_date)
     observation_count = returns["Date"].between(start_date, end_date).sum()
@@ -194,7 +197,9 @@ def show_selected_crisis(selected_crisis):
         weakest_value
     )
 
+# Gradio output and interface functions
 def gradio_correlation_output(selected_crisis):
+    """Format the crisis correlation figure and summary for Gradio output."""
     results = show_selected_crisis(selected_crisis)
     fig = results[0]
     average_corr = results[1]
@@ -212,6 +217,7 @@ def gradio_correlation_output(selected_crisis):
     return fig, summary
 
 def gradio_analysis_output(selected_crisis, analysis_view):
+    """Return the selected correlation analysis view and matching Gradio summary."""
     if analysis_view == "Crisis Correlation":
         return gradio_correlation_output(selected_crisis)
 
@@ -231,6 +237,7 @@ def gradio_analysis_output(selected_crisis, analysis_view):
     return fig, summary
 
 def build_correlation_panel():
+    """Build the interactive Gradio controls and outputs for the correlation panel."""
     crisis_dropdown = gr.Dropdown(
         choices=list(crises.keys()),
         value="2008 Financial Crisis",

@@ -121,7 +121,7 @@ def realizedvol(x, y):
                      return(vix_spread)
               else:
                 raise ValueError(f"Please select a date between {crisis_periods[y][0]} and {crisis_periods[y][1]}")
-       if y not in crisis_periods:
+       else:
               raise ValueError(f"Unknown crisis regime: {y}")      
 
 #Banking/Financial Sector relative performance from crisis start to date 

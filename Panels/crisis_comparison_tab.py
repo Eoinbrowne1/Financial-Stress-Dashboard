@@ -122,7 +122,7 @@ def update_panel(chart_type, chosen_names, measure, window, add_custom, custom_s
     else:
         fig = plot_bubbles(table)
 
-    text = EXPLANATION + "\n\n" + stress_summary(table, chosen_crises)
+    text = stress_summary(table, chosen_crises)
     if message != "":
         text = "**" + message + "**\n\n" + text
     return headline_cards(table), fig, text
@@ -162,6 +162,8 @@ def build_crisis_comparison_tab():
             custom_end = gr.Textbox(value="2018-12-31", label="End (YYYY-MM-DD)", visible=False)
         with gr.Column(scale=3):
             plot = gr.Plot(value=first_fig, show_label=False)
+            with gr.Accordion("How to read this chart", open=False):
+                gr.Markdown(EXPLANATION)
             text = gr.Markdown(first_text)
 
     # Redraw whenever any control changes

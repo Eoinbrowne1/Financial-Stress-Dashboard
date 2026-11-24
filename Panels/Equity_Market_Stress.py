@@ -105,7 +105,7 @@ def vixfear(x, y):
                        return("CALM (<20)")
               else:
                      raise ValueError(f"Please select a date between {crisis_periods[y][0]} and {crisis_periods[y][1]}")
-       if y not in crisis_periods:
+       else:
              raise ValueError(f"Unknown crisis regime: {y}")
 
 #21 day annualized realized volatility log returns

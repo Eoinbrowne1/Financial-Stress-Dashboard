@@ -61,3 +61,39 @@ def stress_summary(table, chosen_crises):
         peak = crisis_rows["Stress index peak"].iloc[0]
         lines.append(f"| {name} | {peak:.2f} |")
     return "\n".join(lines)
+
+def stat_card(label, value, detail, colour):
+    """One headline card: a small label, a big number and a line of detail."""
+    return (f'<div style="flex:1; min-width:180px; padding:16px 18px; border-radius:14px; '
+            f'background:rgba(127,127,127,0.08); border-left:5px solid {colour};">'
+            f'<div style="font-size:13px; opacity:0.75;">{label}</div>'
+            f'<div style="font-size:30px; font-weight:700; margin:4px 0; color:{colour};">{value}</div>'
+            f'<div style="font-size:13px; opacity:0.8;">{detail}</div></div>')
+
+
+def headline_cards(table):
+    """A row of headline cards worked out from the table, so they change with the controls."""
+    hardest = table.sort_values("Max drawdown (%)").iloc[0]
+    wildest = table.sort_values("Peak yearly volatility (%)", ascending=False).iloc[0]
+    slowest = table.sort_values("Recovery (trading days)", ascending=False).iloc[0]
+
+    if slowest["Recovered"] == "No":
+        slow_detail = f"{slowest['Asset']}, {slowest['Crisis']} (not yet recovered)"
+    else:
+        slow_detail = f"{slowest['Asset']}, {slowest['Crisis']}"
+
+    cards = [
+        stat_card("Deepest fall", f"{hardest['Max drawdown (%)']:.1f}%",
+                  f"{hardest['Asset']}, {hardest['Crisis']}", ASSET_COLOURS[hardest["Asset"]]),
+        stat_card("Wildest swings", f"{wildest['Peak yearly volatility (%)']:.0f}%",
+                  f"{wildest['Asset']}, {wildest['Crisis']}", ASSET_COLOURS[wildest["Asset"]]),
+        stat_card("Slowest recovery", f"{slowest['Recovery (years)']:.1f} yrs",
+                  slow_detail, ASSET_COLOURS[slowest["Asset"]]),
+    ]
+
+    if STRESS is not None:
+        most_stress = table.sort_values("Stress index peak", ascending=False).iloc[0]
+        cards.append(stat_card("Peak system stress", f"{most_stress['Stress index peak']:.1f}",
+                               f"{most_stress['Crisis']} (0 = normal)", "#7f7f7f"))
+
+    return '<div style="display:flex; gap:12px; flex-wrap:wrap;">' + "".join(cards) + "</div>"

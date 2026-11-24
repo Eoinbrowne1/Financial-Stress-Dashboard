@@ -97,3 +97,32 @@ def headline_cards(table):
                                f"{most_stress['Crisis']} (0 = normal)", "#7f7f7f"))
 
     return '<div style="display:flex; gap:12px; flex-wrap:wrap;">' + "".join(cards) + "</div>"
+
+def update_panel(chart_type, chosen_names, measure, window, add_custom, custom_start, custom_end):
+    """Gradio calls this whenever a control changes.
+    Returns the headline cards, the chart and the text below it."""
+    # Build a smaller dictionary with only the chosen crises
+    chosen_crises = {}
+    for name in chosen_names:
+        chosen_crises[name] = CRISES[name]
+
+    message = ""
+    if add_custom:
+        start, end, message = check_custom_dates(custom_start, custom_end)
+        if start is not None:
+            chosen_crises["Custom period"] = (start, end)
+
+    if len(chosen_crises) == 0:
+        return "", None, "Pick at least one crisis."
+
+    table = compare_crises(PRICES, STRESS, chosen_crises, int(window))
+
+    if chart_type == "Compare one measure":
+        fig = plot_comparison(table, measure)
+    else:
+        fig = plot_bubbles(table)
+
+    text = EXPLANATION + "\n\n" + stress_summary(table, chosen_crises)
+    if message != "":
+        text = "**" + message + "**\n\n" + text
+    return headline_cards(table), fig, text

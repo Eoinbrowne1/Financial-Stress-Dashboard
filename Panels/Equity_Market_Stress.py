@@ -50,7 +50,7 @@ crisis_events = {
 zoom_before = pd.Timedelta(days=30)
 zoom_after= pd.Timedelta(days=30)
 
-DATA_DIR = Path(__file__).parent.parent / "data"
+DATA_DIR = Path(__file__).parent.parent / "Data"
 
 def load_prices(filename: str) -> pd.DataFrame:
     try:
@@ -105,7 +105,7 @@ def vixfear(x, y):
                        return("CALM (<20)")
               else:
                      raise ValueError(f"Please select a date between {crisis_periods[y][0]} and {crisis_periods[y][1]}")
-       if y not in crisis_periods:
+       else:
              raise ValueError(f"Unknown crisis regime: {y}")
 
 #21 day annualized realized volatility log returns
@@ -121,7 +121,7 @@ def realizedvol(x, y):
                      return(vix_spread)
               else:
                 raise ValueError(f"Please select a date between {crisis_periods[y][0]} and {crisis_periods[y][1]}")
-       if y not in crisis_periods:
+       else:
               raise ValueError(f"Unknown crisis regime: {y}")      
 
 #Banking/Financial Sector relative performance from crisis start to date 
@@ -273,18 +273,16 @@ def make_dashboard(target_date: str, crisis: str):
 
         return fig, shown_date, status       
           
-
+#buttons for moving trading days
 def step_days(current_date: str, crisis: str, delta_days: int):
-    """Move a number of trading days within the crisis window."""
     start, end = crisis_periods[crisis]
     trading_days = list(spdata.loc[start:end].index)
     current = spdata.index.asof(pd.Timestamp(current_date))
     pos = trading_days.index(current)
     new_pos = max(0, min(pos + delta_days, len(trading_days) - 1))
     return make_dashboard(trading_days[new_pos].strftime("%Y-%m-%d"), crisis)
-
+#Create chart and controls inside gradio
 def build_equity_panel():
-    """Create the Equity Market Stress controls and chart inside the current Gradio layout."""
     first_crisis = "2008 Financial Crisis"
     first_fig, first_date, first_status = make_dashboard(default_dates[first_crisis], first_crisis)
 
@@ -306,3 +304,8 @@ def build_equity_panel():
     date_box.submit(make_dashboard, inputs=[date_box, crisis_radio], outputs=outputs)
     prev_btn.click(lambda d, c: step_days(d, c, -5), inputs=[date_box, crisis_radio], outputs=outputs)
     next_btn.click(lambda d, c: step_days(d, c, 5), inputs=[date_box, crisis_radio], outputs=outputs)
+
+if __name__ == "__main__":
+      with gr.Blocks() as demo:
+          build_equity_panel()
+      demo.launch()

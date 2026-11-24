@@ -9,8 +9,8 @@ Four panels, one per team member, each answering a different question about the
 1. Install the packages:
    pip install -r requirements.txt
 2. From the main folder, start the dashboard:
-   Gradio run shared_app_gr.py
-3. It opens in your browser at http://localhost:8501
+   python3 shared_app_gr.py
+3. It opens in your browser at 
 
 No API key is needed: the FRED data is saved in the `Data` folder.
 (Optional: to download fresh FRED data, set an environment variable `FRED_API_KEY`
@@ -21,8 +21,8 @@ and delete `Data/fred_STLFSI4.csv`.)
 | Data | Source | File | Used by |
 |---|---|---|---|
 | Daily prices: SPY (US stocks), GLD (gold), TLT (US government bonds), USO (oil), from January 2007 | Yahoo Finance via yfinance (`download_data.py`) | `Data/market_data.csv` | Crisis Comparison |
+| Expanded daily prices: SPY, QQQ, IWM, EFA, EEM, TLT, IEF, LQD, HYG, GLD, USO, VNQ | Yahoo Finance via yfinance | `Data/market_data_expanded.csv` | Crisis Correlation Heatmap |
 | St. Louis Fed Financial Stress Index (STLFSI4, weekly, 0 = normal stress) | FRED API, downloaded once and saved by `load_stress()` | `Data/fred_STLFSI4.csv` | Crisis Comparison |
-|csv` |
 
 ## Crisis periods (shared by all panels)
 
@@ -67,7 +67,24 @@ No statistics are typed in manually, so adding a crisis to `CRISES` updates ever
 with known answers (run it with `python check_crisis_comparison.py`).
 
 ### 3. Crisis Correlation Heatmap (Eoin)
-(Eoin to fill in)
+**Question:** How do relationships between major asset classes change during periods of financial stress?
+
+The panel calculates daily log returns for 12 market ETFs covering equities, government and corporate bonds, gold, oil and real estate. It then calculates the correlation matrix for the selected crisis period.
+
+**Controls**
+- **Crisis period:** choose between the 2008 Financial Crisis, COVID-19 Crash and 2022 Market Stress.
+- **Analysis view:** switch between the crisis correlation matrix and the change in correlation relative to normal market conditions.
+
+**Analysis**
+- **Crisis correlation heatmap:** shows the pairwise correlations between the 12 assets during the selected crisis.
+- **Normal-market benchmark:** removes the three defined crisis periods from the dataset and calculates correlations using the remaining observations.
+- **Change vs Normal Market:** subtracts the normal-market correlation matrix from the selected crisis matrix to show how individual relationships changed.
+- **Diversification ranking:** ranks non-equity assets by their average correlation with the five equity ETFs. A lower correlation indicates greater diversification against equities during that crisis.
+- **Summary statistics:** reports average correlation, average absolute correlation, the highest positive correlation and the most negative correlation.
+
+The dashboard also compares average absolute correlation during each crisis with the non-crisis baseline. This indicates whether cross-asset relationships became stronger or weaker during the selected period.
+
+All statistics are calculated dynamically from `Data/market_data_expanded.csv`; no correlation results are manually entered.
 
 ### 4. Financial Stress Index (Dara)
 (Dara to fill in)
@@ -88,4 +105,4 @@ Each member's use of AI is described in their individual learning journal.
  `Data/fred_STLFSI4.csv` |
 | Eoin | Crisis Correlation Heatmap | `Panels/Crisis_Correlation_Heatmap.py` |
 | Dara | Financial Stress Index | `Panels/Financial_Stress_Index.py` |
-| Shared | Dashboard app | `shared_app.py` (set up by Eoin) |
+| Shared | Dashboard app | `shared_app_gr.py` |

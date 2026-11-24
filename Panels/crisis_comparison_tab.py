@@ -30,3 +30,20 @@ PRICES = load_prices()
 STRESS = load_stress()
 FIRST_DAY = PRICES.index.min() + pd.Timedelta(days=30)   
 LAST_DAY = PRICES.index.max()
+
+def check_custom_dates(start_text, end_text):
+    """Check the user's custom dates. Returns (start, end, message):
+    start and end are None if the dates can't be used."""
+    try:
+        start = pd.to_datetime(start_text, format="%Y-%m-%d")
+        end = pd.to_datetime(end_text, format="%Y-%m-%d")
+    except ValueError:
+        return None, None, "Type the custom dates as YYYY-MM-DD, e.g. 2018-10-01."
+
+    if start >= end:
+        return None, None, "The custom start date must be before the end date."
+    if start < FIRST_DAY or end > LAST_DAY:
+        return None, None, (f"Custom dates must be between {FIRST_DAY.date()} "
+                            f"and {LAST_DAY.date()}.")
+    return str(start.date()), str(end.date()), ""
+

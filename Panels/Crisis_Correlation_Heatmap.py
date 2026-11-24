@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
+import gradio as gr
 
 data = pd.read_csv("Data/market_data_expanded.csv")
 data["Date"] = pd.to_datetime(data["Date"])
@@ -128,7 +129,48 @@ def normal_market_correlation():
     normal_corr = normal_data[TICKERS].corr()   
     return normal_corr
   
- 
+def correlation_change_matrix(crisis_matrix):
+    normal_matrix = normal_market_correlation()
+    change_matrix = crisis_matrix - normal_matrix
+    return change_matrix
+
+def plot_change_heatmap(change_matrix, title):
+    fig, ax = plt.subplots(figsize=(13,8))
+    mask = np.tril(
+        np.ones(change_matrix.shape, dtype=bool)
+    )
+    sns.heatmap(
+        change_matrix,
+        annot=True,
+        cmap="RdBu",
+        vmin=-1,
+        vmax=1,
+        center=0,
+        ax=ax,
+        mask=mask,
+        fmt=".2f",
+        annot_kws={"size":9},
+        cbar_kws={"label": "Change in Correlation", "shrink": 0.85, "pad": 0.02}
+    )
+    ax.grid(False)
+    ax.set_title(
+        f"{title} - Change vs Normal Market",
+        loc="left",
+        fontweight ="bold",
+        fontsize=14,
+        pad=12
+    )
+    return fig
+
+def choose_analysis_view(selected_crisis, analysis_view):
+    if analysis_view == "Crisis Correlation":
+        return show_selected_crisis(selected_crisis)[0]
+    start_date, end_date = crises[selected_crisis]
+    crisis_matrix = crisis_correlation(start_date,end_date)
+    change_matrix = correlation_change_matrix(crisis_matrix)
+    observation_count = returns["Date"].between(start_date, end_date).sum()
+    return plot_change_heatmap(change_matrix, f"{selected_crisis} - {observation_count} trading days")
+
 def show_selected_crisis(selected_crisis):
     start_date, end_date = crises[selected_crisis]
     selected_corr = crisis_correlation(start_date, end_date)
@@ -152,3 +194,63 @@ def show_selected_crisis(selected_crisis):
         weakest_value
     )
 
+def gradio_correlation_output(selected_crisis):
+    results = show_selected_crisis(selected_crisis)
+    fig = results[0]
+    average_corr = results[1]
+    average_abs_corr = results[2]
+    strongest_pair = results[3]
+    weakest_pair = results[4]
+    strongest_value = results[5]
+    weakest_value = results[6]
+    summary = (f"### Correlation Summary\n"
+               f"**Average Correlation:** {average_corr:.2f} \n"
+               f"**Average Absolute Correlation:** {average_abs_corr:.2f} \n"
+               f"**Highest Positive Correlation:** {strongest_pair} ({strongest_value:.2f}) \n"
+               f"**Most Negative Correlation:** {weakest_pair} ({weakest_value:.2f})"
+    )
+    return fig, summary
+
+def gradio_analysis_output(selected_crisis, analysis_view):
+    if analysis_view == "Crisis Correlation":
+        return gradio_correlation_output(selected_crisis)
+
+    start_date, end_date = crises[selected_crisis]
+    crisis_matrix = crisis_correlation(start_date, end_date)
+    change_matrix = correlation_change_matrix(crisis_matrix)
+
+    observation_count = returns["Date"].between(start_date, end_date).sum()
+
+    fig = plot_change_heatmap(
+        change_matrix,
+        f"{selected_crisis} — {observation_count} trading days"
+    )
+
+    summary = "### Change vs Normal Market\nPositive values mean correlation increased during the crisis; negative values mean it decreased."
+
+    return fig, summary
+
+def build_correlation_panel():
+    crisis_dropdown = gr.Dropdown(
+        choices=list(crises.keys()),
+        value="2008 Financial Crisis",
+        label="Select crisis period"
+    )
+    analysis_view = gr.Radio(
+                choices=["Crisis Correlation", "Change vs Normal Market"],
+                value="Crisis Correlation",
+                label="Analysis view"
+            )
+    initial_figure, initial_summary = gradio_correlation_output("2008 Financial Crisis")
+    correlation_plot = gr.Plot(value=initial_figure)
+    summary_output = gr.Markdown(value=initial_summary)
+    crisis_dropdown.change(
+        fn=gradio_analysis_output, 
+        inputs=[crisis_dropdown, analysis_view],
+        outputs=[correlation_plot, summary_output]
+    )
+    analysis_view.change(
+        fn=gradio_analysis_output,
+        inputs=[crisis_dropdown, analysis_view],
+        outputs=[correlation_plot, summary_output]
+    )

@@ -180,7 +180,7 @@ def update_stress_panel(
     """Redraw the chart and summary when the control changes.
 
     Args:
-        start_year (int): Firsy year to show.
+        start_year (int): First year to show.
         end_year (int): Last year to show.
         crises (list): Names of the crises to shade.
         sma_weeks (int): Weeks in the moving average.
@@ -206,6 +206,42 @@ def update_stress_panel(
         f"**Weeks above normal:** {summary['percent_above']:.0f}%"
     )
     return fig, text
+
+def build_stress_tab() -> None:
+    """Add the Financial Stress Index controls, chart and summary to the page.
+    Call this inside a 'with gr.Tab(...):' block in the group's Gradio app.
+    
+    Returns:
+        None
+    """
+    stress = load_stress_index()
+    first_year = stress.index.min().year
+    last_year = stress.index.max().year
+    all_crises = list(CRISES.keys())
+
+    gr.Markdown(
+        "The St. Louis Fed Financial Stress Index (FRED: STLFSI4) combines "
+        "weekly measures from bond, stock and money markets. 0 means normal"
+        "stress; above o means more stress than normal."
+    )
+
+    # The controls
+    with gr.Row():
+        start_year = gr.Slider(first_year, last_year, value=2006, step=1, label="Start year")
+        end_year = gr.Slider(first_year, last_year, value=last_year, step=1, label ="Last year")
+
+    crises = gr.CheckboxGroup(choices=all_crises, value=all_crises, label="Crises to shade")
+    sma_weeks = gr.Slider(1, 12, value=1, step=1, label="Moving average (weeks, 1 = no smoothing)")
+
+    # The outputs, showing the default view when the page first opens
+    first_fig, first_text = update_stress_panel(2006, last_year, all_crises, 1)
+    chart = gr.Plot(value=first_fig, label="Financial Stress Index")
+    summary = gr.Markdown(first_text)
+
+    # Redraw whenever any control changes
+    controls = [start_year, end_year, crises, sma_weeks]
+    for control in controls:
+        control.change(fn=update_stress_panel, inputs=controls, outputs=[chart, summary])
                 
 
 # --- Quick test (only runs when this file is run directly) ---

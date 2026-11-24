@@ -3,6 +3,7 @@ import streamlit as st
 from Panels.Crisis_Correlation_Heatmap import show_selected_crisis, crises
 from Panels.Crisis_Comparison import (load_prices, load_stress, compare_crises,
                                       plot_comparison, plot_bubbles, CRISES)
+from datetime import date
 
 st.set_page_config(
     page_title="Financial Stress Dashboard",
@@ -25,6 +26,9 @@ with tab2:
     st.header("Crisis Comparison")
     st.write("Which financial crisis was most severe, and how did the crises differ")
 
+    prices = load_prices()
+    last_day = prices.index.max().date()
+
     chart_type = st.radio("Chart", ["Compare one measure", "Overall severity (bubbles)"],
                           horizontal=True)
     
@@ -33,6 +37,17 @@ with tab2:
     chosen_crises = {}
     for name in chosen_names:
         chosen_crises[name] = CRISES[name]
+
+    if st.checkbox("Add my own period to compare"):
+        left, right = st.columns(2)
+        custom_start = left.date_input("Start", value=date(2018, 10, 1),
+                                       min_value=date(2007, 2, 1), max_value=last_day)
+        custom_end = right.date_input("End", value=date(2018, 12, 31),
+                                      min_value=date(2007, 2, 1), max_value=last_day)
+        if custom_start >= custom_end:
+            st.warning("The start date must be before the end date.")
+        else:
+            chosen_crises["Custom period"] = (str(custom_start), str(custom_end))
 
     if chart_type == "Compare one measure":
         measure = st.selectbox("Measure", ["Max drawdown (%)",
@@ -51,7 +66,6 @@ with tab2:
     if len(chosen_crises) == 0:
         st.warning("Pick at least one crisis.")
     else:
-        prices = load_prices()
         stress = load_stress()
         table = compare_crises(prices, stress, chosen_crises, window)
 
@@ -60,7 +74,16 @@ with tab2:
         else:
             st.pyplot(plot_bubbles(table))
 
-        st.write("**Financial Stress Index peak** (St. Louis Fed, 0 = normal)")
+        st.caption("**Max drawdown:** the worst % fall from a peak to a low during the period. "
+                   "**Peak yearly volatility:** how wildly prices swung at the most turbulent point, "
+                   "as a yearly figure. **Recovery:** years from the low until the price got back "
+                   "to its old peak (or years so far, if it hasn't). "
+                   "Oil is measured with the USO fund, which tracks oil futures and loses value "
+                   "over time, so it can make oil's recovery look slower than the oil price itself.")
+
+
+        st.write("**Financial Stress Index peak**: the highest weekly stress reading in each period "
+                 "(St. Louis Fed). 0 = normal, above 0 = more stress than normal.")
         cols = st.columns(len(chosen_crises))              # one column per crisis
         for i, name in enumerate(chosen_crises):
             crisis_rows = table[table["Crisis"] == name]   # this crisis's rows

@@ -161,7 +161,7 @@ def build_crisis_comparison_tab():
             custom_start = gr.Textbox(value="2018-10-01", label="Start (YYYY-MM-DD)", visible=False)
             custom_end = gr.Textbox(value="2018-12-31", label="End (YYYY-MM-DD)", visible=False)
         with gr.Column(scale=3):
-            plot = gr.Plot(value=first_fig, label="Crisis comparison")
+            plot = gr.Plot(value=first_fig, show_label=False)
             text = gr.Markdown(first_text)
 
     # Redraw whenever any control changes

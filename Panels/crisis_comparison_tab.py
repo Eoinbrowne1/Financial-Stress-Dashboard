@@ -126,3 +126,13 @@ def update_panel(chart_type, chosen_names, measure, window, add_custom, custom_s
     if message != "":
         text = "**" + message + "**\n\n" + text
     return headline_cards(table), fig, text
+
+def show_or_hide(chart_type, measure, add_custom):
+    """Only show each control when it does something."""
+    show_measure = chart_type == "Compare one measure"
+    show_window = chart_type == "Overall severity (bubbles)" or (
+        show_measure and measure == "Peak yearly volatility (%)")
+    return (gr.update(visible=show_measure),      # measure dropdown
+            gr.update(visible=show_window),       # volatility slider
+            gr.update(visible=add_custom),        # custom start box
+            gr.update(visible=add_custom))        # custom end box

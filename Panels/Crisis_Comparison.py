@@ -257,7 +257,7 @@ def plot_bubbles(table):
                    size="Peak yearly volatility (%)",
                    sizes=(100, 1500),           #smallest and biggest bubble
                    palette=ASSET_COLOURS, alpha=0.7, ax=ax)
-   ax.legend(frameon=False, loc="upper left", bbox_to_anchor=(1, 1))
+   ax.legend(frameon=False, loc="upper left", bbox_to_anchor=(1, 1), fontsize=9)
    ax.set_title(headline, loc="left", fontweight="bold", color=INK)
    ax.set_xlabel("Max drawdown (%)\nSource: Yahoo Finance daily prices (SPY, GLD, TLT, USO), 2007 onwards.",
                   loc="left", fontsize=9)

@@ -78,9 +78,31 @@ def smooth_stress_index(stress: pd.Series, weeks: int) -> pd.Series:
     # Each average belongs to the last date in its window
     return pd.Series(sma_values, index=stress.index[weeks - 1:])
 
+def summarise_stress(stress: pd.Series) -> dict:
+    """Work out the key numbers for the selected period.
+
+    Args:
+        stress (pd.Series): Stress index values for the period shown.
+
+    Returns:
+        dict: The latest value, the peak value, the date of the peak, and the percentage of weeks with above normal stress.
+    """
+    peak = stress.max()
+    peak_date = stress[stress == peak].index[0]
+    weeks_above_normal = len(stress[stress > 0])
+    percent_above = weeks_above_normal / len(stress) * 100
+    return {
+        "latest": stress.iloc[-1],
+        "peak": peak,
+        "peak_date": peak_date,
+        "percent_above": percent_above,
+    }
+
+
 # --- Quick test (only runs when this file is run directly) ---
 
 if __name__ == "__main__":
     stress = load_stress_index()
     print(stress.head())
     print(stress.tail())
+    print(summarise_stress(stress))

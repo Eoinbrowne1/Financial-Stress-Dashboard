@@ -295,7 +295,7 @@ def build_equity_panel():
                 prev_btn = gr.Button("◀ −5 Trading Days")
                 next_btn = gr.Button("+5 Trading Days ▶")
         status = gr.Markdown(first_status)
-    plot = gr.Plot(value=first_fig)
+    plot = gr.Plot(value=first_fig, show_label=False)
 
     outputs = [plot, date_box, status]   # every event updates the chart, the date box and the message
 

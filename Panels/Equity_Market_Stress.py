@@ -140,7 +140,7 @@ def finperformance(x, y):
               raise ValueError(f"Unknown crisis regime: {y}") 
 
 
-plt.rcParams["font.sans-serif"] = "Segoe UI"
+plt.rcParams["font.sans-serif"] = ["Segoe UI", "Dejavu Sans"]
 
 
 
@@ -304,8 +304,3 @@ def build_equity_panel():
     date_box.submit(make_dashboard, inputs=[date_box, crisis_radio], outputs=outputs)
     prev_btn.click(lambda d, c: step_days(d, c, -5), inputs=[date_box, crisis_radio], outputs=outputs)
     next_btn.click(lambda d, c: step_days(d, c, 5), inputs=[date_box, crisis_radio], outputs=outputs)
-
-if __name__ == "__main__":
-      with gr.Blocks() as demo:
-          build_equity_panel()
-      demo.launch()

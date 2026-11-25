@@ -38,7 +38,29 @@ Each window starts just before the US stock market peak and ends just after its 
 ## Panels
 
 ### 1. Equity Market Stress (Ruairi)
-(Ruairi to fill in)
+**Question** How were different equities markets affected during different crises?
+
+For the selected date in each crisis, the following are calculated and plotted on either a line or bar chart:
+- **Drawdown from Prrevious Peak**: the % fall of an index from the previous in-crisis peak
+- **21 day annualized realized volatility**: compares historical volatility with priced-in forward-looking fear
+- **Financial Sector ETF relative performance**: compares the FSETF's % change in relative performance to the S&P 500 from the start of the crisis
+- **Volatility Index fear**: Pulls the VIX measure and classifies it based on severity
+
+All calculations and plotting are done automatically when the date and/or crisis is changed
+
+**Controls**
+- **Select Crisis Period**: Choose which of the three crises to analyze
+- **Inspect Date - Press Enter**: Manually enter the desired date and press enter to update the panel
+- **+5/-5 Trading Days**: Skip forward/back 5 valid trading days. Panel automatically updates
+
+**Analysis**
+- **S&P 500 on YYYY-MM-DD**: Shows the S&P price, the crisis peak, highlights the drawdown, and displays the Financial Sector ETF's relative performance
+- **Market Fear: VIX vs 21-Day Realised Volatility**: Shows the VIX value, its classifier, the 30-stress threshold, the 21-day realised volatility and the spread, the crisis peak so far and the number of days above the threshold
+- **Drawdown from Crisis Peak (%)**: Shows the % drawdown from the previous in-crisis peak of the four indexes 
+
+All calculations are completed using data from the following .csv files: `Data/fsetf.csv`, `Data/nasd.csv`, 
+`Data/russ.csv`, `Data/sp.csv`, `Data/vix.csv`, no manual entry of figures
+
 
 ### 2. Crisis Comparison (Sean)
 **Question:** Which financial crisis was most severe, and how did the crises differ?
@@ -97,7 +119,7 @@ The panel plots the St. Louis Fed Financial Stress Index (STLFSI4), a weekly ind
 - **Crises to shade:** tick which crisis periods to highlight
 - **Moving average:** smooth the line over 1 to 12 weeks (1 = raw weekly data), using the Simple Moving Average function
 
-Th chart title and the summary line under it (latest reading, peak in the period, and % of weeks above normal) are recalculated for whatever period is selected.
+The chart title and the summary line under it (latest reading, peak in the period, and % of weeks above normal) are recalculated for whatever period is selected.
 
 **Key Findings**
 - Stress peaked at **9.7 in October 2008**, far higher than any other point since 1993.

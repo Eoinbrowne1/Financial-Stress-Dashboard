@@ -22,7 +22,8 @@ and delete `Data/fred_STLFSI4.csv`.)
 |---|---|---|---|
 | Daily prices: SPY (US stocks), GLD (gold), TLT (US government bonds), USO (oil), from January 2007 | Yahoo Finance via yfinance (`download_data.py`) | `Data/market_data.csv` | Crisis Comparison |
 | Expanded daily prices: SPY, QQQ, IWM, EFA, EEM, TLT, IEF, LQD, HYG, GLD, USO, VNQ | Yahoo Finance via yfinance | `Data/market_data_expanded.csv` | Crisis Correlation Heatmap |
-| St. Louis Fed Financial Stress Index (STLFSI4, weekly, 0 = normal stress) | FRED API, downloaded once and saved by `load_stress()` | `Data/fred_STLFSI4.csv` | Crisis Comparison |
+| St. Louis Fed Financial Stress Index (STLFSI4, weekly, 0 = normal stress) | FRED API, downloaded once and saved by `load_stress()` | `Data/fred_STLFSI4.csv` | Crisis Comparison, Financial Stress Index |
+
 
 ## Crisis periods (shared by all panels)
 
@@ -87,7 +88,27 @@ The dashboard also compares average absolute correlation during each crisis with
 All statistics are calculated dynamically from `Data/market_data_expanded.csv`; no correlation results are manually entered.
 
 ### 4. Financial Stress Index (Dara)
-(Dara to fill in)
+**Question:** How stressed is the US financial system right now, and how do the three crises compare on one consistent measure?
+
+The panel plots the St. Louis Fed Financial Stress Index (STLFSI4), a weekly index built from interest rates, yield spreads, and other market indicators. A value of 0 means normal stress; above 0 means more stress than normal. Each crisis period is shaded, and its peak is labelled automatically.
+
+**Controls**
+- **Start year / End year:** choose the period to show (1993 to 2026)
+- **Crises to shade:** tick which crisis periods to highlight
+- **Moving average:** smooth the line over 1 to 12 weeks (1 = raw weekly data), using the Simple Moving Average function
+
+Th chart title and the summary line under it (latest reading, peak in the period, and % of weeks above normal) are recalculated for whatever period is selected.
+
+**Key Findings**
+- Stress peaked at **9.7 in October 2008**, far higher than any other point since 1993.
+- COVID was sharp but short: stress jumped to **5.6 in March 2020** and fell back within weeks.
+- **2022 barely registered**, peaking at only **0.6 in July 2022**. Markets fell, but the financial system itself was not under stress.
+- From 2006 to 2026, **31% of weeks** had above-normal stress.
+- Smoothing has a cost: an 8 week average cuts the 2008 peak from 9.7 to 7.8 and moves the COVID peak from March to April 2020.
+
+**Checks:** run 'python3 Panels/Financial_Stress_Index.py' to test the panel on its own. It prints the data and summary statistics, shows the chart, and saves it to 'figures/stress_index.png
+
+![Financial Stress Index chart](figures/stress_index.png)
 
 ## Use of AI tools
 

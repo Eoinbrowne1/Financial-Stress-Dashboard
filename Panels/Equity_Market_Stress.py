@@ -238,7 +238,7 @@ def make_dashboard(target_date: str, crisis: str):
         ax_vix.set_title("Market Fear: VIX vs 21-Day Realised Volatility", fontsize=11, fontweight="bold", color="#1e293b", loc="left")
         ax_vix.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d"))
         vix_so_far = vixdata.loc[crisis_start:t_date, "Close"]
-        stress_days = (vix_so_far >= 30).sum()       # True counts as 1, False as 0
+        stress_days = (vix_so_far >= 30).sum()       
         total_days = len(vix_so_far)
         peak_vix = vix_so_far.max()
         ax_vix.text(0.01, 0.95,
@@ -249,7 +249,7 @@ def make_dashboard(target_date: str, crisis: str):
 
             # Event markers: only draw events that fall inside the visible window
         for event_date, event_name in crisis_events[crisis].items():
-            e_date = spdata.loc[event_date:].index[0]   # first trading day on/after the event
+            e_date = spdata.loc[event_date:].index[0]   
             if win_start <= e_date <= win_end:
                 ax_sp.axvline(e_date, color="#7c3aed", linestyle=":", linewidth=1.2)
                 ax_vix.axvline(e_date, color="#7c3aed", linestyle=":", linewidth=1.2)
@@ -267,15 +267,15 @@ def make_dashboard(target_date: str, crisis: str):
 
         ax_dd.barh(names, values, color=colours)
         for name, value in dd_values.items():
-            if value <= -20:      # long bar: white label inside the bar
+            if value <= -20:      
                 ax_dd.text(value, name, f" {value:.1f}%", va="center", ha="left",
                 fontsize=8.5, fontweight="bold", color="#ffffff")
-            else:                 # short bar: dark label just outside the bar
+            else:                 
                 ax_dd.text(value, name, f"{value:.1f}% ", va="center", ha="right",
                 fontsize=8.5, fontweight="bold", color="#1e293b")
         ax_dd.axvline(0, color="#1e293b", linewidth=0.8)
         ax_dd.set_xlim(dd_axis_limits[crisis], 0)
-        ax_dd.invert_yaxis()                     # S&P 500 at the top
+        ax_dd.invert_yaxis()                     
         ax_dd.set_title("Drawdown from Crisis Peak (%)", fontsize=10,
             fontweight="bold", color="#1e293b")
         ax_dd.grid(True, axis="x", linestyle=":", alpha=0.5)
@@ -306,8 +306,7 @@ def build_equity_panel():
         status = gr.Markdown(first_status)
     plot = gr.Plot(value=first_fig, show_label=False)
 
-    outputs = [plot, date_box, status]   # every event updates the chart, the date box and the message
-
+    outputs = [plot, date_box, status]   
     crisis_radio.change(lambda c: make_dashboard(default_dates[c], c),
                         inputs=crisis_radio, outputs=outputs)
     date_box.submit(make_dashboard, inputs=[date_box, crisis_radio], outputs=outputs)

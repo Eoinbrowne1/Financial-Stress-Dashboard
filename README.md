@@ -122,8 +122,7 @@ Each member's use of AI is described in their individual learning journal.
 | Member | Panel | Files |
 |---|---|---|
 | Ruairi | Equity Market Stress | `Panels/Equity_Market_Stress.py` |
-| Sean | Crisis Comparison | `Panels/Crisis_Comparison.py`, `check_crisis_comparison.py`
- `Data/fred_STLFSI4.csv` |
+| Sean | Crisis Comparison | `Panels/Crisis_Comparison.py`, `check_crisis_comparison.py |
 | Eoin | Crisis Correlation Heatmap | `Panels/Crisis_Correlation_Heatmap.py` |
 | Dara | Financial Stress Index | `Panels/Financial_Stress_Index.py` |
 | Shared | Dashboard app | `shared_app_gr.py` |

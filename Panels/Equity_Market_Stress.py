@@ -235,7 +235,16 @@ def make_dashboard(target_date: str, crisis: str):
         ax_vix.set_xlabel("Date", fontweight="bold", color="#1e293b")
         ax_vix.grid(True, linestyle=":", alpha=0.5)
         ax_vix.legend(loc="upper right", fontsize=8.5, framealpha=0.9)
+        ax_vix.set_title("Market Fear: VIX vs 21-Day Realised Volatility", fontsize=11, fontweight="bold", color="#1e293b", loc="left")
         ax_vix.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d"))
+        vix_so_far = vixdata.loc[crisis_start:t_date, "Close"]
+        stress_days = (vix_so_far >= 30).sum()       # True counts as 1, False as 0
+        total_days = len(vix_so_far)
+        peak_vix = vix_so_far.max()
+        ax_vix.text(0.01, 0.95,
+                    f"Since crisis start: VIX ≥ 30 on {stress_days} of {total_days} days  |  Peak VIX: {peak_vix:.2f}",
+                    transform=ax_vix.transAxes, va="top", fontsize=8.5, color="#1e293b",
+                    bbox=dict(boxstyle="round,pad=0.3", facecolor="#ffffff", edgecolor="#cbd5e1", alpha=0.9))
         plt.setp(ax_vix.get_xticklabels(), rotation=25, ha="right")
 
             # Event markers: only draw events that fall inside the visible window

@@ -168,4 +168,5 @@ Each member's use of AI is described in their individual learning journal.
 | Sean | Crisis Comparison | `Panels/Crisis_Comparison.py`, `check_crisis_comparison.`py |
 | Eoin | Crisis Correlation Heatmap | `Panels/Crisis_Correlation_Heatmap.py` |
 | Dara | Financial Stress Index | `Panels/Financial_Stress_Index.py` |
+| Eoin | Dashboard Overview | `Panels/dashboard_overview.py` |
 | Shared | Dashboard app | `shared_app_gr.py` |

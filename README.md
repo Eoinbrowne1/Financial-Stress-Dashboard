@@ -37,6 +37,17 @@ Each window starts just before the US stock market peak and ends just after its 
 
 ## Panels
 
+### Dashboard Overview
+
+The landing page presents four complementary visualisations
+in a 2x2 grid, summarising equity market drawdowns,
+cross-asset correlations, comparative crisis severity
+and historical financial stress.
+
+All charts are calculated dynamically from the existing
+datasets. The four individual tabs provide more detailed
+interactive analysis.
+
 ### 1. Equity Market Stress (Ruairi)
 **Question** How were different equities markets affected during different crises?
 

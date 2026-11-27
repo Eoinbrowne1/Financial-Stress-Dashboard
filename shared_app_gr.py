@@ -6,9 +6,13 @@ from Panels.Equity_Market_Stress import build_equity_panel
 from Panels.Crisis_Correlation_Heatmap import build_correlation_panel
 from Panels.crisis_comparison_tab import build_crisis_comparison_tab
 from Panels.Financial_Stress_Index import build_stress_tab
+from Panels.dashboard_overview import build_overview
+
 
 with gr.Blocks(title="Financial Stress Dashboard", theme=gr.themes.Soft()) as demo:
     gr.Markdown("# Financial Stress Dashboard")
+    with gr.Tab("Overview"):
+        build_overview()
     with gr.Tab("Equity Market Stress"):
         build_equity_panel()
     with gr.Tab("Crisis Correlation"):

@@ -51,6 +51,7 @@ def plot_overview():
         "Crisis Correlation - 2008",
         fontweight="bold"
     )
+    axes[0,1].grid(False)
 
     # 3. Crisis Comparison
     drawdowns = []

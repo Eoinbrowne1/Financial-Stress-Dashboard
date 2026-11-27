@@ -32,8 +32,7 @@ and delete `Data/fred_STLFSI4.csv`.)
 | 2008 Financial Crisis | 2007-10-01 | 2009-03-31 |
 | COVID-19 Crash | 2020-02-01 | 2020-04-30 |
 | 2022 Market Stress | 2021-12-01 | 2022-10-31 |
-
-Each window starts just before the US stock market peak and ends just after its low.
+The same crisis periods are used consistently across all four panels.
 
 ## Panels
 
@@ -52,7 +51,7 @@ interactive analysis.
 **Question** How were different equities markets affected during different crises?
 
 For the selected date in each crisis, the following are calculated and plotted on either a line or bar chart:
-- **Drawdown from Prrevious Peak**: the % fall of an index from the previous in-crisis peak
+- **Drawdown from Previous Peak**: the % fall of an index from the previous in-crisis peak
 - **21 day annualized realized volatility**: compares historical volatility with priced-in forward-looking fear
 - **Financial Sector ETF relative performance**: compares the FSETF's % change in relative performance to the S&P 500 from the start of the crisis
 - **Volatility Index fear**: Pulls the VIX measure and classifies it based on severity
@@ -150,7 +149,7 @@ The chart title and the summary line under it (latest reading, peak in the perio
 - From 2006 to 2026, **31% of weeks** had above-normal stress.
 - Smoothing has a cost: an 8 week average cuts the 2008 peak from 9.7 to 7.8 and moves the COVID peak from March to April 2020.
 
-**Checks:** run 'python3 Panels/Financial_Stress_Index.py' to test the panel on its own. It prints the data and summary statistics, shows the chart, and saves it to 'figures/stress_index.png
+**Checks:** run 'python3 Panels/Financial_Stress_Index.py' to test the panel on its own. It prints the data and summary statistics, shows the chart, and saves it to 'figures/stress_index.png'
 
 ![Financial Stress Index chart](figures/stress_index.png)
 
@@ -166,7 +165,7 @@ Each member's use of AI is described in their individual learning journal.
 | Member | Panel | Files |
 |---|---|---|
 | Ruairi | Equity Market Stress | `Panels/Equity_Market_Stress.py` |
-| Sean | Crisis Comparison | `Panels/Crisis_Comparison.py`, `check_crisis_comparison.py |
+| Sean | Crisis Comparison | `Panels/Crisis_Comparison.py`, `check_crisis_comparison.`py |
 | Eoin | Crisis Correlation Heatmap | `Panels/Crisis_Correlation_Heatmap.py` |
 | Dara | Financial Stress Index | `Panels/Financial_Stress_Index.py` |
 | Shared | Dashboard app | `shared_app_gr.py` |

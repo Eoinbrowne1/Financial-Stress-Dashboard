@@ -10,7 +10,7 @@ Four panels, one per team member, each answering a different question about the
    pip install -r requirements.txt
 2. From the main folder, start the dashboard:
    python3 shared_app_gr.py
-3. It opens in your browser at 
+3. It opens in your browser at http://127.0.0.1:7860
 
 No API key is needed: the FRED data is saved in the `Data` folder.
 (Optional: to download fresh FRED data, set an environment variable `FRED_API_KEY`
@@ -90,22 +90,33 @@ No statistics are typed in manually, so adding a crisis to `CRISES` updates ever
 with known answers (run it with `python check_crisis_comparison.py`).
 
 ### 3. Crisis Correlation Heatmap (Eoin)
+
 **Question:** How do relationships between major asset classes change during periods of financial stress?
 
-The panel calculates daily log returns for 12 market ETFs covering equities, government and corporate bonds, gold, oil and real estate. It then calculates the correlation matrix for the selected crisis period.
+The panel calculates daily log returns for 12 market ETFs covering equities, government and corporate bonds, gold, oil and real estate. It analyses how correlations differ across crises and how individual asset relationships evolve over time.
 
 **Controls**
 - **Crisis period:** choose between the 2008 Financial Crisis, COVID-19 Crash and 2022 Market Stress.
-- **Analysis view:** switch between the crisis correlation matrix and the change in correlation relative to normal market conditions.
+- **Analysis view:** switch between the crisis correlation matrix and the change in correlation relative to the normal-market benchmark.
+- **Comparison asset:** select any of the other 11 ETFs to compare against SPY.
+- **Rolling window:** adjust the slider between 5 and 60 trading days to explore short-term and longer-term correlations.
 
 **Analysis**
-- **Crisis correlation heatmap:** shows the pairwise correlations between the 12 assets during the selected crisis.
-- **Normal-market benchmark:** removes the three defined crisis periods from the dataset and calculates correlations using the remaining observations.
-- **Change vs Normal Market:** subtracts the normal-market correlation matrix from the selected crisis matrix to show how individual relationships changed.
-- **Diversification ranking:** ranks non-equity assets by their average correlation with the five equity ETFs. A lower correlation indicates greater diversification against equities during that crisis.
-- **Summary statistics:** reports average correlation, average absolute correlation, the highest positive correlation and the most negative correlation.
+- **Crisis correlation heatmap:** displays pairwise correlations between the 12 assets using a consistent -1 to +1 colour scale.
+- **Normal-market benchmark:** excludes all three defined crisis periods and calculates correlations using the remaining observations.
+- **Change vs Normal Market:** subtracts the benchmark matrix from the selected crisis matrix using a -2 to +2 colour scale.
+- **Diversification ranking:** ranks seven potential diversifiers by their average correlation with the five selected equity ETFs.
+- **Summary statistics:** reports average correlation, average absolute correlation and the highest and lowest pairwise correlations.
+- **Correlation change statistics:** reports average change, average absolute change and the asset pairs experiencing the largest increases and decreases.
+- **Rolling Correlation Explorer:** plots rolling correlations between SPY and a selected ETF throughout the crisis, alongside the normal-market benchmark.
 
-The dashboard also compares average absolute correlation during each crisis with the non-crisis baseline. This indicates whether cross-asset relationships became stronger or weaker during the selected period.
+**Implementation**
+- Reusable functions separate data preparation, statistical analysis, visualisation and interface design.
+- Vectorised NumPy operations calculate daily log returns.
+- Missing and infinite returns are removed before analysis.
+- The normal-market correlation matrix is cached to avoid repeated calculations.
+- Portable file paths are implemented using pathlib.
+- Gradio event handlers automatically update the analysis when users change their selections.
 
 All statistics are calculated dynamically from `Data/market_data_expanded.csv`; no correlation results are manually entered.
 

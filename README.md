@@ -52,7 +52,7 @@ interactive analysis.
 **Question** How were different equities markets affected during different crises?
 
 For the selected date in each crisis, the following are calculated and plotted on either a line or bar chart:
-- **Drawdown from Prrevious Peak**: the % fall of an index from the previous in-crisis peak
+- **Drawdown from Previous Peak**: the % fall of an index from the previous in-crisis peak
 - **21 day annualized realized volatility**: compares historical volatility with priced-in forward-looking fear
 - **Financial Sector ETF relative performance**: compares the FSETF's % change in relative performance to the S&P 500 from the start of the crisis
 - **Volatility Index fear**: Pulls the VIX measure and classifies it based on severity

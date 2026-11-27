@@ -214,11 +214,12 @@ def gradio_correlation_output(selected_crisis):
     strongest_value = results[5]
     weakest_value = results[6]
     ranking=results[7]
-    summary = (f"### Correlation Summary\n"
-               f"**Average Correlation:** {average_corr:.2f} \n"
-               f"**Average Absolute Correlation:** {average_abs_corr:.2f} \n"
-               f"**Highest Positive Correlation:** {strongest_pair} ({strongest_value:.2f}) \n"
-               f"**Most Negative Correlation:** {weakest_pair} ({weakest_value:.2f})"
+    summary = (
+        "### Correlation Summary\n"
+        f"**Average Correlation:** {average_corr:.2f}\n\n"
+        f"**Average Absolute Correlation:** {average_abs_corr:.2f}\n\n"
+        f"**Highest Positive Correlation:** {strongest_pair[0]} & {strongest_pair[1]} ({strongest_value:.2f})\n\n"
+        f"**Most Negative Correlation:** {weakest_pair[0]} & {weakest_pair[1]} ({weakest_value:.2f})"
     )
     summary += "\n\n### Diversification Ranking\n"
     summary += "Lower average correlation with equities suggests greater diversification potential.\n\n"
@@ -256,6 +257,53 @@ def gradio_analysis_output(selected_crisis, analysis_view):
     )
 
     return fig, summary
+def plot_rolling_correlation(selected_crisis, comparison_asset, window):
+    """Plot rolling correlations between SPY and a selected asset."""
+    start_date, end_date = crises[selected_crisis]
+
+    rolling_corr = (
+        returns["SPY"]
+        .rolling(window=int(window))
+        .corr(returns[comparison_asset])
+    )
+
+    crisis_mask = returns["Date"].between(start_date, end_date)
+
+    fig, ax = plt.subplots(figsize=(12, 4))
+
+    ax.plot(
+        returns.loc[crisis_mask, "Date"],
+        rolling_corr.loc[crisis_mask],
+        color="#6366f1",
+        linewidth=2,
+        label=f"{int(window)}-day rolling correlation"
+    )
+
+    baseline = normal_market_correlation().loc["SPY", comparison_asset]
+
+    ax.axhline(
+        baseline,
+        color="orange",
+        linestyle="--",
+        label="Normal-market correlation"
+    )
+
+    ax.axhline(0, color="grey", linestyle=":", linewidth=1)
+
+    ax.set_ylim(-1, 1)
+    ax.set_title(
+        f"SPY vs {comparison_asset} - {selected_crisis}",
+        fontweight="bold"
+    )
+    ax.set_ylabel("Correlation")
+    ax.set_xlabel("Date")
+    ax.legend()
+    ax.grid(alpha=0.2)
+
+    fig.tight_layout()
+    plt.close(fig)
+
+    return fig
 
 def build_correlation_panel():
     """Build the interactive Gradio controls and outputs for the correlation panel."""
@@ -286,3 +334,36 @@ def build_correlation_panel():
         inputs=[crisis_dropdown, analysis_view],
         outputs=[correlation_plot, summary_output]
     )
+    with gr.Accordion("Rolling Correlation Explorer", open=False):
+
+        gr.Markdown(
+            "Explore how correlations evolved during the selected crisis. "
+            "Adjust the rolling window to compare short-term and longer-term relationships."
+        )
+
+        rolling_asset = gr.Dropdown(
+            choices=[ticker for ticker in TICKERS if ticker != "SPY"],
+            value="TLT",
+            label="Compare SPY with"
+        )
+
+        rolling_window = gr.Slider(
+            minimum=5,
+            maximum=60,
+            step=5,
+            value=20,
+            label="Rolling window (trading days)"
+        )
+
+        rolling_plot = gr.Plot(
+            value=plot_rolling_correlation(
+                "2008 Financial Crisis", "TLT", 20
+            )
+        )
+
+    for control in [crisis_dropdown, rolling_asset, rolling_window]:
+        control.change(
+            fn=plot_rolling_correlation,
+            inputs=[crisis_dropdown, rolling_asset, rolling_window],
+            outputs=rolling_plot
+        )

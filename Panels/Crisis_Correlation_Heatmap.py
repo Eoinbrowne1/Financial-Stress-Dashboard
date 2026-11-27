@@ -334,7 +334,7 @@ def build_correlation_panel():
         inputs=[crisis_dropdown, analysis_view],
         outputs=[correlation_plot, summary_output]
     )
-    with gr.Accordion("Rolling Correlation Explorer", open=False):
+    with gr.Accordion("Rolling Correlation Explorer", open=True):
 
         gr.Markdown(
             "Explore how correlations evolved during the selected crisis. "

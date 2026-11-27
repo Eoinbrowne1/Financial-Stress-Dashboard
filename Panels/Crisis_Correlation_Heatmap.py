@@ -3,15 +3,19 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 import gradio as gr
+from pathlib import Path
+from functools import lru_cache
 
 # Load and prepare market data
-data = pd.read_csv("Data/market_data_expanded.csv")
+BASE_DIR = Path(__file__).resolve().parents[1]
+data = pd.read_csv(BASE_DIR / "Data" / "market_data_expanded.csv")
 data["Date"] = pd.to_datetime(data["Date"])
+data = data.sort_values("Date").reset_index(drop=True)
 TICKERS = [ "SPY", "QQQ", "IWM", "EFA", "EEM","TLT", "IEF", "LQD", "HYG","GLD", "USO", "VNQ"]
 EQUITY_TICKERS = ["SPY", "QQQ", "IWM", "EFA", "EEM"]
 DIVERSIFIER_TICKERS = ["TLT", "IEF", "LQD", "HYG", "GLD", "USO", "VNQ"]
 returns = np.log(data[TICKERS] / data[TICKERS].shift(1))
-returns = returns.dropna()
+returns = returns.replace([np.inf, -np.inf], np.nan).dropna()
 returns["Date"] = data.loc[returns.index, "Date"]
 
 # Core correlation analysis
@@ -71,12 +75,12 @@ def plot_heatmap(correlation_matrix, title, average_abs_corr, normal_average_abs
     fig.text(0.83, 0.38, alternatives_key, fontsize=9, va="top", linespacing= 1.5, bbox=dict(boxstyle="round, pad=0.5", facecolor="#f2f2f2", edgecolor="#cccccc"))
     fig.subplots_adjust(right=0.80)      
     ax.set_title(f"{title} - Cross Asset Correlations", loc= "left", fontweight = "bold", fontsize=14, pad=12)
-    if correlation_change > 0:
+    if correlation_change > 0.01:
         impact_interpretation = "Cross-asset relationships strengthened"
-    elif correlation_change < 0:
+    elif correlation_change < -0.01:
         impact_interpretation = "Cross-asset relationships weakened"
     else: 
-        impact_interpretation = "No major change in cross-asset relationships"      
+        impact_interpretation = "Little change in cross-asset relationships"      
     impact_text = (
         "CRISIS IMPACT\n"
         f"Crisis avg |corr|: {average_abs_corr:.2f}\n"
@@ -114,7 +118,7 @@ crises = {
 
 # Diversification and normal-market benchmark analysis
 def diversification_ranking(correlation_matrix):
-    """Rank non-equity assets by their average correlation with the selected equity group."""
+    """Rank potential diversifiers by their average correlation with the selected equity group."""
     equities = EQUITY_TICKERS
     diversifiers = DIVERSIFIER_TICKERS
     scores = {}
@@ -122,7 +126,7 @@ def diversification_ranking(correlation_matrix):
         scores[asset] = correlation_matrix.loc[equities, asset].mean()
     ranking = pd.Series(scores).sort_values()
     return ranking  
-
+@lru_cache(maxsize=1)
 def normal_market_correlation():
     """Calculate the baseline correlation matrix after excluding the defined crisis periods."""
     normal_data = returns.copy()
@@ -154,8 +158,8 @@ def plot_change_heatmap(change_matrix, title):
         change_matrix,
         annot=True,
         cmap="RdBu",
-        vmin=-1,
-        vmax=1,
+        vmin=-2,
+        vmax=2,
         center=0,
         ax=ax,
         mask=mask,
@@ -194,7 +198,8 @@ def show_selected_crisis(selected_crisis):
         strongest_pair,
         weakest_pair,
         strongest_value,
-        weakest_value
+        weakest_value,
+        ranking
     )
 
 # Gradio output and interface functions
@@ -208,12 +213,19 @@ def gradio_correlation_output(selected_crisis):
     weakest_pair = results[4]
     strongest_value = results[5]
     weakest_value = results[6]
+    ranking=results[7]
     summary = (f"### Correlation Summary\n"
                f"**Average Correlation:** {average_corr:.2f} \n"
                f"**Average Absolute Correlation:** {average_abs_corr:.2f} \n"
                f"**Highest Positive Correlation:** {strongest_pair} ({strongest_value:.2f}) \n"
                f"**Most Negative Correlation:** {weakest_pair} ({weakest_value:.2f})"
     )
+    summary += "\n\n### Diversification Ranking\n"
+    summary += "Lower average correlation with equities suggests greater diversification potential.\n\n"
+    summary += "| Rank | Asset | Average Correlation |\n"
+    summary += "|---|---|---|\n"
+    for position, (asset, score) in enumerate(ranking.items(), start=1):
+        summary += f"| {position} | {asset} | {score:.2f} |\n"
     return fig, summary
 
 def gradio_analysis_output(selected_crisis, analysis_view):
@@ -232,12 +244,25 @@ def gradio_analysis_output(selected_crisis, analysis_view):
         f"{selected_crisis} — {observation_count} trading days"
     )
 
-    summary = "### Change vs Normal Market\nPositive values mean correlation increased during the crisis; negative values mean it decreased."
+    average_change, average_abs_change, highest_pair, lowest_pair, highest_value, lowest_value = correlation_summary(change_matrix)
+
+    summary = (
+        "### Change vs Normal Market\n"
+        f"**Average Correlation Change:** {average_change:+.2f}\n\n"
+        f"**Average Absolute Change:** {average_abs_change:.2f}\n\n"
+        f"**Highest Correlation Change:** {highest_pair[0]} & {highest_pair[1]} ({highest_value:+.2f})\n\n"
+        f"**Lowest Correlation Change:** {lowest_pair[0]} & {lowest_pair[1]} ({lowest_value:+.2f})\n\n"
+        "Positive values indicate increased correlation during the crisis, while negative values indicate decreased correlation."
+    )
 
     return fig, summary
 
 def build_correlation_panel():
     """Build the interactive Gradio controls and outputs for the correlation panel."""
+    gr.Markdown(
+        "Explore correlations across 12 ETFs during major financial crises. "
+        "The normal-market benchmark excludes all three defined crisis periods."
+    )
     crisis_dropdown = gr.Dropdown(
         choices=list(crises.keys()),
         value="2008 Financial Crisis",

@@ -22,7 +22,8 @@ and delete `Data/fred_STLFSI4.csv`.)
 |---|---|---|---|
 | Daily prices: SPY (US stocks), GLD (gold), TLT (US government bonds), USO (oil), from January 2007 | Yahoo Finance via yfinance (`download_data.py`) | `Data/market_data.csv` | Crisis Comparison |
 | Expanded daily prices: SPY, QQQ, IWM, EFA, EEM, TLT, IEF, LQD, HYG, GLD, USO, VNQ | Yahoo Finance via yfinance | `Data/market_data_expanded.csv` | Crisis Correlation Heatmap |
-| St. Louis Fed Financial Stress Index (STLFSI4, weekly, 0 = normal stress) | FRED API, downloaded once and saved by `load_stress()` | `Data/fred_STLFSI4.csv` | Crisis Comparison |
+| St. Louis Fed Financial Stress Index (STLFSI4, weekly, 0 = normal stress) | FRED API, downloaded once and saved by `load_stress()` | `Data/fred_STLFSI4.csv` | Crisis Comparison, Financial Stress Index |
+
 
 ## Crisis periods (shared by all panels)
 
@@ -37,7 +38,29 @@ Each window starts just before the US stock market peak and ends just after its 
 ## Panels
 
 ### 1. Equity Market Stress (Ruairi)
-(Ruairi to fill in)
+**Question** How were different equities markets affected during different crises?
+
+For the selected date in each crisis, the following are calculated and plotted on either a line or bar chart:
+- **Drawdown from Prrevious Peak**: the % fall of an index from the previous in-crisis peak
+- **21 day annualized realized volatility**: compares historical volatility with priced-in forward-looking fear
+- **Financial Sector ETF relative performance**: compares the FSETF's % change in relative performance to the S&P 500 from the start of the crisis
+- **Volatility Index fear**: Pulls the VIX measure and classifies it based on severity
+
+All calculations and plotting are done automatically when the date and/or crisis is changed
+
+**Controls**
+- **Select Crisis Period**: Choose which of the three crises to analyze
+- **Inspect Date - Press Enter**: Manually enter the desired date and press enter to update the panel
+- **+5/-5 Trading Days**: Skip forward/back 5 valid trading days. Panel automatically updates
+
+**Analysis**
+- **S&P 500 on YYYY-MM-DD**: Shows the S&P price, the crisis peak, highlights the drawdown, and displays the Financial Sector ETF's relative performance
+- **Market Fear: VIX vs 21-Day Realised Volatility**: Shows the VIX value, its classifier, the 30-stress threshold, the 21-day realised volatility and the spread, the crisis peak so far and the number of days above the threshold
+- **Drawdown from Crisis Peak (%)**: Shows the % drawdown from the previous in-crisis peak of the four indexes 
+
+All calculations are completed using data from the following .csv files: `Data/fsetf.csv`, `Data/nasd.csv`, 
+`Data/russ.csv`, `Data/sp.csv`, `Data/vix.csv`, no manual entry of figures
+
 
 ### 2. Crisis Comparison (Sean)
 **Question:** Which financial crisis was most severe, and how did the crises differ?
@@ -87,7 +110,27 @@ The dashboard also compares average absolute correlation during each crisis with
 All statistics are calculated dynamically from `Data/market_data_expanded.csv`; no correlation results are manually entered.
 
 ### 4. Financial Stress Index (Dara)
-(Dara to fill in)
+**Question:** How stressed is the US financial system right now, and how do the three crises compare on one consistent measure?
+
+The panel plots the St. Louis Fed Financial Stress Index (STLFSI4), a weekly index built from interest rates, yield spreads, and other market indicators. A value of 0 means normal stress; above 0 means more stress than normal. Each crisis period is shaded, and its peak is labelled automatically.
+
+**Controls**
+- **Start year / End year:** choose the period to show (1993 to 2026)
+- **Crises to shade:** tick which crisis periods to highlight
+- **Moving average:** smooth the line over 1 to 12 weeks (1 = raw weekly data), using the Simple Moving Average function
+
+The chart title and the summary line under it (latest reading, peak in the period, and % of weeks above normal) are recalculated for whatever period is selected.
+
+**Key Findings**
+- Stress peaked at **9.7 in October 2008**, far higher than any other point since 1993.
+- COVID was sharp but short: stress jumped to **5.6 in March 2020** and fell back within weeks.
+- **2022 barely registered**, peaking at only **0.6 in July 2022**. Markets fell, but the financial system itself was not under stress.
+- From 2006 to 2026, **31% of weeks** had above-normal stress.
+- Smoothing has a cost: an 8 week average cuts the 2008 peak from 9.7 to 7.8 and moves the COVID peak from March to April 2020.
+
+**Checks:** run 'python3 Panels/Financial_Stress_Index.py' to test the panel on its own. It prints the data and summary statistics, shows the chart, and saves it to 'figures/stress_index.png
+
+![Financial Stress Index chart](figures/stress_index.png)
 
 ## Use of AI tools
 
@@ -101,8 +144,7 @@ Each member's use of AI is described in their individual learning journal.
 | Member | Panel | Files |
 |---|---|---|
 | Ruairi | Equity Market Stress | `Panels/Equity_Market_Stress.py` |
-| Sean | Crisis Comparison | `Panels/Crisis_Comparison.py`, `check_crisis_comparison.py`
- `Data/fred_STLFSI4.csv` |
+| Sean | Crisis Comparison | `Panels/Crisis_Comparison.py`, `check_crisis_comparison.py |
 | Eoin | Crisis Correlation Heatmap | `Panels/Crisis_Correlation_Heatmap.py` |
 | Dara | Financial Stress Index | `Panels/Financial_Stress_Index.py` |
 | Shared | Dashboard app | `shared_app_gr.py` |

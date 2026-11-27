@@ -14,7 +14,7 @@ import gradio as gr
 # --- Settings ---
 
 # Where the data file lives (relative to main project folder)
-DATA_FILE = "Data/stlfsi.csv"
+DATA_FILE = "Data/fred_STLFSI4.csv"
 
 # Crisis periods agreed by group : name -> (start date, end date)
 CRISES = {
@@ -42,8 +42,8 @@ def load_stress_index(path: str = DATA_FILE) -> pd.Series:
         pd.Series: Stress index values, with the dates as the index.
     """
     df = pd.read_csv(path)
-    df["observation_date"] = pd.to_datetime(df["observation_date"])
-    df = df.set_index("observation_date")
+    df["date"] = pd.to_datetime(df["date"])
+    df = df.set_index("date")
     df = df.dropna()
     return df["STLFSI4"]
 
@@ -221,8 +221,8 @@ def build_stress_tab() -> None:
 
     gr.Markdown(
         "The St. Louis Fed Financial Stress Index (FRED: STLFSI4) combines "
-        "weekly measures from bond, stock and money markets. 0 means normal"
-        "stress; above o means more stress than normal."
+        "weekly measures from bond, stock and money markets. 0 means normal "
+        "stress; above 0 means more stress than normal."
     )
 
     # The controls
